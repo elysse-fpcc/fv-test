@@ -281,4 +281,41 @@ public class EnricherUtils {
 
         return query;
     }
+
+    public static String convertLetterToCustomOrder(CoreSession session, String query, String dialect){
+        if(query != null && !query.isEmpty()){
+            String titleREGEX = "dc:title ILIKE [\"\'](.+)%[\"\']";
+
+            Pattern titlePattern = Pattern.compile(titleREGEX);
+            Matcher titleMatch = titlePattern.matcher(query);
+
+            String customOrder = "";
+
+            if(titleMatch.find() && !titleMatch.group(1).isEmpty()){
+                
+                    String titleEntry = titleMatch.group(1);
+
+                    String testQuery = "SELECT * FROM FVCharacter WHERE dc:title = '" + titleEntry + "' AND fva:dialect = '" + dialect + "'";
+                    DocumentModelList result = session.query(testQuery); 
+
+                    if(result.get(0) != null){
+                        customOrder = (String) result.get(0).getPropertyValue("fv:custom_order");
+                        if(customOrder.equals("%") || 
+                            customOrder.equals("_") ) customOrder = '\\' + customOrder;
+                        query = query.replaceFirst(titleREGEX, 
+                            "fv:custom_order LIKE \'" + customOrder + "\' OR fv:custom_order LIKE \'" + customOrder + "_%\'");
+                    }
+
+                    //Add escaping logic for customOrder
+                }
+            //Get character dc:title
+            //Get dialectID
+            //Find character which matches dc:title within dialectID
+            //Get fv:custom_order from the character (using the session)
+            //Taking the current query and removing the dc:title field, and replacing with fv:custom_order
+        }
+
+        return query;
+
+    }
 }

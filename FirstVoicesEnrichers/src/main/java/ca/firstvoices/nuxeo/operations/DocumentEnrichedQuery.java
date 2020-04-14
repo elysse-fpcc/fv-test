@@ -31,6 +31,8 @@ public class DocumentEnrichedQuery {
 
     public static final String CATEGORY_CHILDREN_ENRICHMENT = "category_children";
 
+    public static final String CUSTOM_ORDER_ENRICHMENT = "alphabet_starts_with";
+
     public static final String DESC = "DESC";
 
     public static final String ASC = "ASC";
@@ -42,7 +44,7 @@ public class DocumentEnrichedQuery {
     protected AutomationService automationService;
 
     @Param(name = "enrichment", required = false, description = "Enrichment to perform on query", widget = Constants.W_OPTION, values = {
-            CATEGORY_CHILDREN_ENRICHMENT })
+            CATEGORY_CHILDREN_ENRICHMENT, CUSTOM_ORDER_ENRICHMENT })
     protected String enrichment = "";
 
     @Param(name = "query", required = true, description = "The query to " + "perform.")
@@ -68,6 +70,9 @@ public class DocumentEnrichedQuery {
             ASC, DESC })
     protected StringList sortOrder;
 
+    @Param(name = "dialectId", required = false, description = "Id of the target dialect")
+    protected String dialectId;
+
     @Param(name = PageProviderService.NAMED_PARAMETERS, required = false, description = "Named parameters to pass to the page provider to fill in query variables.")
     protected Properties namedParameters;
 
@@ -79,6 +84,9 @@ public class DocumentEnrichedQuery {
         switch (enrichment) {
         case CATEGORY_CHILDREN_ENRICHMENT:
             query = EnricherUtils.expandCategoriesToChildren(session, query);
+            break;
+        case CUSTOM_ORDER_ENRICHMENT:
+            if(dialectId != null && !dialectId.isEmpty()) query = EnricherUtils.convertLetterToCustomOrder(session, query, dialectId);
             break;
         }
 

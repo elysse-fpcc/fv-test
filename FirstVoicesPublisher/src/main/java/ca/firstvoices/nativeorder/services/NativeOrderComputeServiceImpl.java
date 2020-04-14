@@ -25,6 +25,7 @@ import org.nuxeo.ecm.core.api.PathRef;
 
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,13 +36,32 @@ public class NativeOrderComputeServiceImpl extends AbstractService implements Na
 
     private DocumentModel[] loadCharacters(DocumentModel dialect) {
         DocumentModelList chars = dialect.getCoreSession().getChildren(new PathRef(dialect.getPathAsString() + "/Alphabet"));
+        updateCustomOrderCharacters(dialect, chars.stream().filter(character -> !character.isTrashed()).toArray(DocumentModel[]::new));
         return chars
-                .stream()
-                .filter(character -> !character.isTrashed() && character.getPropertyValue("fvcharacter:alphabet_order") != null)
-                .sorted(Comparator.comparing(d -> (Long) d.getPropertyValue("fvcharacter:alphabet_order")))
-                .toArray(DocumentModel[]::new);
+            .stream()
+            .filter(character -> !character.isTrashed() && character.getPropertyValue("fvcharacter:alphabet_order") != null)
+            .sorted(Comparator.comparing(d -> (Long) d.getPropertyValue("fvcharacter:alphabet_order")))
+            .toArray(DocumentModel[]::new);
     }
 
+    private void updateCustomOrderCharacters(DocumentModel dialect, DocumentModel[] chars){
+        boolean edited = false;
+        for(DocumentModel c : chars){
+            String customOrder = "";
+            if(c.getPropertyValue("fvcharacter:alphabet_order") != null && (Long) c.getPropertyValue("fvcharacter:alphabet_order") > 0){
+                customOrder += ((char) (34 + (Long) c.getPropertyValue("fvcharacter:alphabet_order")));
+            } else {
+                customOrder += '~';
+                customOrder += c.getPropertyValue("dc:title");
+            }
+            if(c.getPropertyValue("fv:custom_order") == null || !c.getPropertyValue("fv:custom_order").equals(customOrder)){
+                c.setPropertyValue("fv:custom_order", customOrder);
+                edited = true;
+            }
+           if(edited) dialect.getCoreSession().saveDocument(c);
+        }
+        return;
+    }
     /* (non-Javadoc)
      * @see ca.firstvoices.publisher.services.NativeOrderComputeService#computeAssetNativeOrderTranslation(org.nuxeo
      * .ecm.core.api.DocumentModel)
