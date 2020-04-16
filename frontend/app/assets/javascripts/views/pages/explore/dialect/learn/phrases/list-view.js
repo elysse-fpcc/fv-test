@@ -73,6 +73,7 @@ export class PhrasesListView extends DataListView {
     gridCols: number,
     gridListView: bool,
     parentID: string,
+    dialectID: string,
     onPagePropertiesChange: func,
     pageProperties: object,
     routeParams: object.isRequired,
@@ -423,6 +424,10 @@ export class PhrasesListView extends DataListView {
     const startsWithQuery = ProviderHelpers.isStartsWithQuery(currentAppliedFilter)
     const nql = `${currentAppliedFilter}&currentPageIndex=${pageIndex -
       1}&pageSize=${pageSize}&sortOrder=${sortOrder}&sortBy=${sortBy}${startsWithQuery}`
+    if(this.props.routeParams.letter ) nql = `${currentAppliedFilter}&currentPageIndex=${pageIndex -
+      1}&dialectId=${this.props.dialectID}&pageSize=${pageSize}&sortOrder=${sortOrder}&sortBy=${sortBy}
+      &enrichment=${"alphabet_starts_with"}${startsWithQuery}`;
+
 
     props.fetchPhrases(this._getPathOrParentID(props), nql)
   }

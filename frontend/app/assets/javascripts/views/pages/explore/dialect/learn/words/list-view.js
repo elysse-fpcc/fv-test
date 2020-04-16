@@ -72,6 +72,7 @@ class WordsListView extends DataListView {
     gridListView: bool,
     pageProperties: object,
     parentID: string,
+    dialectID: string,
     routeParams: object.isRequired,
     // Search
     handleSearch: func,
@@ -318,7 +319,7 @@ class WordsListView extends DataListView {
       newProps.fetchDialect2(newProps.routeParams.dialect_path)
     }
     const searchObj = getSearchObject()
-
+    console.log("TEST")
     this._fetchListViewData(
       newProps,
       newProps.DEFAULT_PAGE,
@@ -353,8 +354,9 @@ class WordsListView extends DataListView {
     const startsWithQuery = ProviderHelpers.isStartsWithQuery(currentAppliedFilter)
 
     const nql = `${currentAppliedFilter}&currentPageIndex=${pageIndex -
-      1}&pageSize=${pageSize}&sortOrder=${sortOrder}&sortBy=${sortBy}&enrichment=category_children${startsWithQuery}`
-
+      1}&dialectId=${this.props.dialectID}&pageSize=${pageSize}&sortOrder=${sortOrder}&sortBy=${sortBy}
+      &enrichment=${this.props.routeParams.letter ? "alphabet_starts_with" : "category_children"}${startsWithQuery}`
+      //console.log("fetchListViewData test")
     // NOTE: this prevents double requests due to DataListView re-calling _fetchListViewData
     if (this.state.nql !== nql) {
       this.setState(

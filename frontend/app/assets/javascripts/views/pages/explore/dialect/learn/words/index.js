@@ -86,11 +86,12 @@ class PageDialectLearnWords extends PageDialectLearnBase {
     )
 
     // Document
-    ProviderHelpers.fetchIfMissing(
+    await ProviderHelpers.fetchIfMissing(
       routeParams.dialect_path + '/Dictionary',
       this.props.fetchDocument,
       this.props.computeDocument
     )
+      //console.log(ProviderHelpers.getEntry(this.props.computeDocument, routeParams.dialect_path + '/Dictionary'))
 
     // Category
     let categories = this.getCategories()
@@ -108,17 +109,24 @@ class PageDialectLearnWords extends PageDialectLearnBase {
     if (characters === undefined) {
       const _pageIndex = 0
       const _pageSize = 100
-
+      //console.log(routeParams)
       await this.props.fetchCharacters(
         `${routeParams.dialect_path}/Alphabet`,
-        `&currentPageIndex=${_pageIndex}&pageSize=${_pageSize}&sortOrder=asc&sortBy=fvcharacter:alphabet_order`
+        `&currentPageIndex=${_pageIndex}&pageSize=${_pageSize}&sortOrder=asc&sortBy=fvcharacter:alphabet_order`,
+        // null,
+        // null,
+        // null,
+        // {dialectId: ""}
       )
       characters = this.getCharacters()
     }
+    
 
     const newState = {
       characters,
       categories,
+      dialectId : selectn("response.contextParameters.ancestry.dialect.uid",
+      ProviderHelpers.getEntry(this.props.computeDocument, routeParams.dialect_path + '/Dictionary'))
     }
 
     // Clear out filterInfo if not in url, eg: /learn/words/categories/[category]
@@ -215,6 +223,7 @@ class PageDialectLearnWords extends PageDialectLearnBase {
         flashcard={this.state.flashcardMode}
         flashcardTitle={pageTitle}
         parentID={selectn('response.uid', computeDocument)}
+        dialectID={this.state.dialectId}
         routeParams={this.props.routeParams}
         // Search:
         handleSearch={this.handleSearch}
@@ -346,6 +355,7 @@ class PageDialectLearnWords extends PageDialectLearnBase {
     switch (searchByMode) {
       case SEARCH_BY_ALPHABET: {
         searchType = 'startsWith'
+        //console.log('TEST')
         // Remove other settings
         // newFilter = newFilter.deleteIn(['currentAppliedFilter', 'contains'], null)
         // newFilter = newFilter.deleteIn(['currentAppliedFilter', 'categories'], null)
@@ -420,8 +430,10 @@ class PageDialectLearnWords extends PageDialectLearnBase {
         searchByDefinitions: false,
         searchByTranslations: false,
         searchPartOfSpeech: SEARCH_PART_OF_SPEECH_ANY,
+        
       },
       searchTerm: '',
+      //dialectId: this.state.dialectId
     })
 
     this.changeFilter({ href, updateHistory })
