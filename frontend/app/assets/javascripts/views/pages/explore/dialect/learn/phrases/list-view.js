@@ -422,11 +422,14 @@ export class PhrasesListView extends DataListView {
 
     // WORKAROUND: DY @ 17-04-2019 - Mark this query as a "starts with" query. See DirectoryOperations.js for note
     const startsWithQuery = ProviderHelpers.isStartsWithQuery(currentAppliedFilter)
-    const nql = `${currentAppliedFilter}&currentPageIndex=${pageIndex -
+    let nql = `${currentAppliedFilter}&currentPageIndex=${pageIndex -
       1}&pageSize=${pageSize}&sortOrder=${sortOrder}&sortBy=${sortBy}${startsWithQuery}`
-    if(this.props.routeParams.letter ) nql = `${currentAppliedFilter}&currentPageIndex=${pageIndex -
+      
+    if(this.props.routeParams.letter){ 
+      console.log("PHRASE_TEST")
+      nql = `${currentAppliedFilter}&currentPageIndex=${pageIndex -
       1}&dialectId=${this.props.dialectID}&pageSize=${pageSize}&sortOrder=${sortOrder}&sortBy=${sortBy}
-      &enrichment=${"alphabet_starts_with"}${startsWithQuery}`;
+      &enrichment=${"alphabet_starts_with"}${""}`;}
 
 
     props.fetchPhrases(this._getPathOrParentID(props), nql)

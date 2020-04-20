@@ -351,11 +351,12 @@ class WordsListView extends DataListView {
     }
 
     // WORKAROUND: DY @ 17-04-2019 - Mark this query as a "starts with" query. See DirectoryOperations.js for note
-    const startsWithQuery = ProviderHelpers.isStartsWithQuery(currentAppliedFilter)
+    const startsWithQuery = ProviderHelpers.isStartsWithQuery(currentAppliedFilter);
 
     const nql = `${currentAppliedFilter}&currentPageIndex=${pageIndex -
-      1}&dialectId=${this.props.dialectID}&pageSize=${pageSize}&sortOrder=${sortOrder}&sortBy=${sortBy}
-      &enrichment=${this.props.routeParams.letter ? "alphabet_starts_with" : "category_children"}${startsWithQuery}`
+        1}&dialectId=${this.props.dialectID}&pageSize=${pageSize}&sortOrder=${sortOrder}&sortBy=${sortBy}
+        &enrichment=${this.props.routeParams.letter ? "alphabet_starts_with" : "category_children"}
+        ${this.props.routeParams.letter ? "" : startsWithQuery}`
       //console.log("fetchListViewData test")
     // NOTE: this prevents double requests due to DataListView re-calling _fetchListViewData
     if (this.state.nql !== nql) {

@@ -126,7 +126,7 @@ class PageDialectLearnWords extends PageDialectLearnBase {
       characters,
       categories,
       dialectId : selectn("response.contextParameters.ancestry.dialect.uid",
-      ProviderHelpers.getEntry(this.props.computeDocument, routeParams.dialect_path + '/Dictionary'))
+          ProviderHelpers.getEntry(this.props.computeDocument, routeParams.dialect_path + '/Dictionary'))
     }
 
     // Clear out filterInfo if not in url, eg: /learn/words/categories/[category]

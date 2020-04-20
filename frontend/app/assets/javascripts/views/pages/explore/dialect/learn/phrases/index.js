@@ -127,7 +127,7 @@ export class PageDialectLearnPhrases extends PageDialectLearnBase {
       characters,
       phraseBooks,
       dialectId : selectn("response.contextParameters.ancestry.dialect.uid",
-      ProviderHelpers.getEntry(this.props.computeDocument, routeParams.dialect_path + '/Dictionary'))
+          ProviderHelpers.getEntry(this.props.computeDocument, routeParams.dialect_path + '/Dictionary'))
     }
 
     // Clear out filterInfo if not in url, eg: /learn/words/categories/[category]
@@ -228,6 +228,7 @@ export class PageDialectLearnPhrases extends PageDialectLearnBase {
         flashcardTitle={pageTitle}
         onPagePropertiesChange={this._handlePagePropertiesChange} // NOTE: This function is in PageDialectLearnBase
         parentID={selectn('response.uid', computeDocument)}
+        dialectID={this.state.dialectId}
         routeParams={this.props.routeParams}
         // Search:
         handleSearch={this.handleSearch}
