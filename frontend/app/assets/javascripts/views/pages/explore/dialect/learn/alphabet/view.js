@@ -45,7 +45,7 @@ import Card from '@material-ui/core/Card'
 import CardContent from '@material-ui/core/CardContent'
 import Typography from '@material-ui/core/Typography'
 
-import WordListView from 'views/pages/explore/dialect/learn/words/list-view'
+import WordsListView from 'views/pages/explore/dialect/learn/words/list-view'
 import PhraseListView from 'views/pages/explore/dialect/learn/phrases/list-view'
 
 import { WORKSPACES } from 'common/Constants'
@@ -205,12 +205,8 @@ export class AlphabetView extends Component {
       relatedWords = (
         <div>
           <h3>
-            <FVLabel
-              transKey="related_words"
-              defaultStr="Related Words"
-              transform="words"
-            />
-            :</h3>
+            <FVLabel transKey="related_words" defaultStr="Related Words" transform="words" />:
+          </h3>
           {relatedWordsContent}
         </div>
       )
@@ -234,11 +230,11 @@ export class AlphabetView extends Component {
                       label: UIHelpers.isViewSize('xs')
                         ? this.props.intl.trans('words', 'Words', 'first')
                         : this.props.intl.trans(
-                          'views.pages.explore.dialect.learn.alphabet.words_starting_with_x',
-                          'Words Starting with ' + selectn('response.title', computeCharacter),
-                          'words',
-                          [selectn('response.title', computeCharacter)]
-                        ),
+                            'views.pages.explore.dialect.learn.alphabet.words_starting_with_x',
+                            'Words Starting with ' + selectn('response.title', computeCharacter),
+                            'words',
+                            [selectn('response.title', computeCharacter)]
+                          ),
                       id: 'find_words',
                       className: 'fontAboriginalSans',
                     },
@@ -246,11 +242,11 @@ export class AlphabetView extends Component {
                       label: UIHelpers.isViewSize('xs')
                         ? this.props.intl.trans('phrases', 'Phrases', 'first')
                         : this.props.intl.trans(
-                          'views.pages.explore.dialect.learn.alphabet.phrases_starting_with_x',
-                          'Phrases Starting with ' + selectn('response.title', computeCharacter),
-                          'words',
-                          [selectn('response.title', computeCharacter)]
-                        ),
+                            'views.pages.explore.dialect.learn.alphabet.phrases_starting_with_x',
+                            'Phrases Starting with ' + selectn('response.title', computeCharacter),
+                            'words',
+                            [selectn('response.title', computeCharacter)]
+                          ),
                       id: 'find_phrases',
                       className: 'fontAboriginalSans',
                     },
@@ -305,7 +301,7 @@ export class AlphabetView extends Component {
                           />
                         </h2>
                         <div className="row">
-                          <WordListView
+                          <WordsListView
                             filter={currentAppliedFilter}
                             routeParams={this.props.routeParams}
                             disableClickItem={false}
@@ -361,7 +357,8 @@ export class AlphabetView extends Component {
             transKey="views.pages.explore.dialect.learn.words.no_audio_yet"
             defaultStr="No audio is available yet"
             transform="first"
-          />.
+          />
+          .
         </span>
       ) : null
     const audioPreviewMap = selectn('response.contextParameters.character.related_audio', computeCharacter) || []
@@ -372,11 +369,7 @@ export class AlphabetView extends Component {
       return (
         <div className={classNames('col-md-6', 'col-xs-12')}>
           <h3>
-            <FVLabel
-              transKey="audio"
-              defaultStr="Audio"
-              transform="first"
-            />
+            <FVLabel transKey="audio" defaultStr="Audio" transform="first" />
           </h3>
           <div>
             {noAudioMessage}
@@ -437,7 +430,7 @@ const mapStateToProps = (state /*, ownProps*/) => {
     routeParams: route.routeParams,
     splitWindowPath,
     windowPath: _windowPath,
-    intl: intlService
+    intl: intlService,
   }
 }
 

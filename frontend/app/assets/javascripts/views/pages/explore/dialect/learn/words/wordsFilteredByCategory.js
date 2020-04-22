@@ -287,7 +287,7 @@ class WordsFilteredByCategory extends Component {
 
     // Render kids or mobile view
     if (isKidsTheme) {
-      const cloneWordListView = wordListView
+      const cloneWordsListView = wordListView
         ? React.cloneElement(wordListView, {
             DEFAULT_PAGE_SIZE: 8,
             disablePageSize: true,
@@ -298,7 +298,7 @@ class WordsFilteredByCategory extends Component {
       return (
         <PromiseWrapper renderOnError computeEntities={computeEntities}>
           <div className="row" style={{ marginTop: '15px' }}>
-            <div className="col-xs-12 col-md-8 col-md-offset-2">{cloneWordListView}</div>
+            <div className="col-xs-12 col-md-8 col-md-offset-2">{cloneWordsListView}</div>
           </div>
         </PromiseWrapper>
       )
