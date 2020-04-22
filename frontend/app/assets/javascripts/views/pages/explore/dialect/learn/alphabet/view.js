@@ -45,7 +45,7 @@ import Card from '@material-ui/core/Card'
 import CardContent from '@material-ui/core/CardContent'
 import Typography from '@material-ui/core/Typography'
 
-import WordListView from 'views/pages/explore/dialect/learn/words/list-view'
+import WordsListView from 'views/pages/explore/dialect/learn/words/list-view'
 import PhraseListView from 'views/pages/explore/dialect/learn/phrases/list-view'
 
 import { WORKSPACES } from 'common/Constants'
@@ -234,9 +234,9 @@ export class AlphabetView extends Component {
                         ? this.props.intl.trans('words', 'Words', 'first')
                         : this.props.intl.trans(
                             'views.pages.explore.dialect.learn.alphabet.words_starting_with_x',
-                            'Words Starting with ' + character,
+                            'Words Starting with ' + selectn('response.title', computeCharacter),
                             'words',
-                            [character]
+                            [selectn('response.title', computeCharacter)]
                           ),
                       id: 'find_words',
                       className: 'fontAboriginalSans',
@@ -246,9 +246,9 @@ export class AlphabetView extends Component {
                         ? this.props.intl.trans('phrases', 'Phrases', 'first')
                         : this.props.intl.trans(
                             'views.pages.explore.dialect.learn.alphabet.phrases_starting_with_x',
-                            'Phrases Starting with ' + character,
+                            'Phrases Starting with ' + selectn('response.title', computeCharacter),
                             'words',
-                            [character]
+                            [selectn('response.title', computeCharacter)]
                           ),
                       id: 'find_phrases',
                       className: 'fontAboriginalSans',
@@ -321,7 +321,7 @@ export class AlphabetView extends Component {
                           />
                         </h2>
                         <div className="row">
-                          <WordListView
+                          <WordsListView
                             filter={currentAppliedFilter}
                             routeParams={this.props.routeParams}
                             disableClickItem={false}
@@ -389,7 +389,7 @@ export class AlphabetView extends Component {
       return (
         <div className="AlphabetViewRowItem">
           <h3>
-            <FVLabel transKey="audio" defaultStr="Audio" transform="first" />:
+            <FVLabel transKey="audio" defaultStr="Audio" transform="first" />
           </h3>
           <div>
             {noAudioMessage}
