@@ -289,18 +289,14 @@ public class EnricherUtils {
     public static String convertLetterToCustomOrder(CoreSession session, String dialect, String letter){
         String customOrder = "";
         String queryLetter = letter;
-
-        if(letter.startsWith("'") ||  letter.startsWith("_")) queryLetter = NXQL.escapeStringInner("\\") + queryLetter;
-        
+        //Double-check escaping
         String testQuery = "SELECT * FROM FVCharacter WHERE dc:title = \"" + queryLetter + "\" AND fva:dialect = \"" + dialect + "\"";
-
         DocumentModelList result = session.query(testQuery); 
 
         if(!result.isEmpty() && result.get(0) != null){
             customOrder = (String) result.get(0).getPropertyValue("fv:custom_order");
         }else{
             customOrder = "~" + letter;
-            
         }
         
         return customOrder;
