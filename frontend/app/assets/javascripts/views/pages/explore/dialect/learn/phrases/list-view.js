@@ -426,10 +426,9 @@ export class PhrasesListView extends DataListView {
       1}&pageSize=${pageSize}&sortOrder=${sortOrder}&sortBy=${sortBy}${startsWithQuery}`
       
     if(this.props.routeParams.letter){ 
-      console.log("PHRASE_TEST")
       nql = `${currentAppliedFilter}&currentPageIndex=${pageIndex -
       1}&dialectId=${this.props.dialectID}&pageSize=${pageSize}&sortOrder=${sortOrder}&sortBy=${sortBy}
-      &enrichment=${"alphabet_starts_with"}${""}`;}
+      &letter=${this.props.routeParams.letter}${"&starts_with_query=Document.CustomOrderQuery"}`;}
 
 
     props.fetchPhrases(this._getPathOrParentID(props), nql)

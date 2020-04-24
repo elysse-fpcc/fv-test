@@ -104,7 +104,7 @@ const generateNxql = ({
       `${switchSearchModes('fv:definitions/*/translation', searchValue, _searchType)} OR ` +
       `${switchSearchModes('dc:title', searchValue, _searchType)}`,
     searchByTitle: switchSearchModes('dc:title', searchValue, _searchType),
-    searchByAlphabet: `dc:title ILIKE '${searchByAlphabetValue}%'`,
+    searchByAlphabet: ``,//`dc:title ILIKE '${searchByAlphabetValue}%'`,
     searchByCategory: `dc:title ILIKE '%${searchValue}%'`,
     searchByPhraseBook: `dc:title ILIKE '%${searchValue}%'`,
     searchByCulturalNotes: `fv:cultural_note ILIKE '%${searchValue}%'`,
@@ -122,10 +122,10 @@ const generateNxql = ({
   }
 
   switch (_searchByMode) {
-    case SEARCH_BY_ALPHABET: {
-      nxqlQueries.push(`${nxqlTmpl.searchByAlphabet}`)
-      break
-    }
+    // case SEARCH_BY_ALPHABET: {
+    //   nxqlQueries.push(`${nxqlTmpl.searchByAlphabet}`)
+    //   break
+    // }
     case SEARCH_BY_CATEGORY: {
       nxqlQueries.push(`${nxqlTmpl.searchByCategory}`)
       break

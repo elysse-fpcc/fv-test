@@ -155,6 +155,9 @@ export default class DirectoryOperations {
 
     if (nxqlQueryParams && nxqlQueryParams.hasOwnProperty('starts_with_query')) {
       endPointToUse = 'Document.Query'
+      if(nxqlQueryParams.starts_with_query === 'Document.CustomOrderQuery'){
+        endPointToUse = 'Document.CustomOrderQuery'
+      }
     }
 
     return new Promise((resolve, reject) => {

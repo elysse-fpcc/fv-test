@@ -267,7 +267,7 @@ function isStartsWithQuery(currentAppliedFilter) {
   const regexTest = new RegExp(regex)
 
   if (regexTest.test(currentAppliedFilter)) {
-    starts_with_query = '&starts_with_query=true'
+    starts_with_query = '&starts_with_query=Document.Query'
   }
 
   return starts_with_query
