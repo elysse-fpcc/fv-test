@@ -20,32 +20,14 @@ import selectn from 'selectn'
 import { connect } from 'react-redux'
 // REDUX: actions/dispatch/func
 import { pushWindowPath } from 'providers/redux/reducers/windowPath'
+import { searchDialectUpdate } from 'providers/redux/reducers/searchDialect'
 
 import NavigationHelpers from 'common/NavigationHelpers'
 import ProviderHelpers from 'common/ProviderHelpers'
 import { SEARCH_BY_ALPHABET, SEARCH_BY_CATEGORY } from 'views/components/SearchDialect/constants'
 import PageDialectLearnBase from 'views/pages/explore/dialect/learn/base'
 
-const { array, bool, func, object } = PropTypes
 class WordsData extends PageDialectLearnBase {
-  static propTypes = {
-    hasPagination: bool,
-    // REDUX: reducers/state
-    routeParams: object.isRequired,
-    properties: object.isRequired,
-    splitWindowPath: array.isRequired,
-    // REDUX: actions/dispatch/func
-    pushWindowPath: func.isRequired,
-  }
-  async componentDidMountViaPageDialectLearnBase() {
-    const newState = {}
-    // Clear out filterInfo if not in url, eg: /learn/words/categories/[category]
-    if (this.props.routeParams.category === undefined) {
-      newState.filterInfo = this.initialFilterInfo()
-    }
-    this.setState(newState)
-  }
-
   constructor(props, context) {
     super(props, context)
 
@@ -79,6 +61,15 @@ class WordsData extends PageDialectLearnBase {
     ].forEach((method) => (this[method] = this[method].bind(this)))
   }
 
+  async componentDidMountViaPageDialectLearnBase() {
+    const newState = {}
+    // Clear out filterInfo if not in url, eg: /learn/words/categories/[category]
+    if (this.props.routeParams.category === undefined) {
+      newState.filterInfo = this.initialFilterInfo()
+    }
+    this.setState(newState)
+  }
+
   render() {
     const { filterInfo, flashcardMode, isKidsTheme } = this.state
     return this.props.children({
@@ -93,6 +84,8 @@ class WordsData extends PageDialectLearnBase {
       intl: this.props.intl,
       routeParams: this.props.routeParams,
       onNavigateRequest: this._onNavigateRequest,
+      searchDialectUpdate: this.props.searchDialectUpdate,
+      computeSearchDialect: this.props.computeSearchDialect,
     })
   }
   // END render
@@ -225,6 +218,19 @@ class WordsData extends PageDialectLearnBase {
   }
 }
 
+// Proptypes
+const { array, bool, func, object } = PropTypes
+WordsData.propTypes = {
+  hasPagination: bool,
+  // REDUX: reducers/state
+  routeParams: object.isRequired,
+  properties: object.isRequired,
+  splitWindowPath: array.isRequired,
+  // REDUX: actions/dispatch/func
+  pushWindowPath: func.isRequired,
+  searchDialectUpdate: func.isRequired,
+}
+
 // REDUX: reducers/state
 const mapStateToProps = (state /*, ownProps*/) => {
   const { navigation, searchDialect, windowPath, locale } = state
@@ -246,6 +252,7 @@ const mapStateToProps = (state /*, ownProps*/) => {
 // REDUX: actions/dispatch/func
 const mapDispatchToProps = {
   pushWindowPath,
+  searchDialectUpdate,
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(WordsData)

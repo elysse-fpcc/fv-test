@@ -11,12 +11,11 @@ class DialectFilterListData extends Component {
     super(props)
 
     this.state = {
-      facetField: ProviderHelpers.switchWorkspaceSectionKeys('fv-word:categories', this.props.routeParams.area),
+      facetField: ProviderHelpers.switchWorkspaceSectionKeys(props.workspaceKey, this.props.routeParams.area),
     }
   }
   async componentDidMount() {
-    const { routeParams } = this.props
-    const path = '/api/v1/path/FV/' + routeParams.area + '/SharedData/Shared Categories/@children'
+    const { path } = this.props
     await ProviderHelpers.fetchIfMissing(path, this.props.fetchCategories, this.props.computeCategories)
     const extractComputedCategories = ProviderHelpers.getEntry(this.props.computeCategories, path)
     const categories = selectn('response.entries', extractComputedCategories)
@@ -35,17 +34,16 @@ class DialectFilterListData extends Component {
 }
 
 // PROPTYPES
-const { any, func, object } = PropTypes
+const { any, func, object, string } = PropTypes
 DialectFilterListData.propTypes = {
   children: any,
+  workspaceKey: string.isRequired, // Used with facetField
+  path: string.isRequired, // Used with facets
   // REDUX: reducers/state
   computeCategories: object.isRequired,
   routeParams: object.isRequired,
   // REDUX: actions/dispatch/func
   fetchCategories: func.isRequired,
-}
-DialectFilterListData.defaultProps = {
-  changeFilter: () => {},
 }
 
 // REDUX: reducers/state

@@ -35,8 +35,12 @@ import { setRouteParams, updatePageProperties } from 'providers/redux/reducers/n
 // FPCC
 // -------------------------------------------
 import AlphabetListView from 'views/components/AlphabetListView'
-import AuthorizationFilter from 'views/components/Document/AuthorizationFilter'
+import AlphabetListViewData from 'views/components/AlphabetListView/AlphabetListViewData'
+
 import DialectFilterList from 'views/components/DialectFilterList'
+import DialectFilterListData from 'views/components/DialectFilterList/DialectFilterListData'
+
+import AuthorizationFilter from 'views/components/Document/AuthorizationFilter'
 import Edit from '@material-ui/icons/Edit'
 import FVButton from 'views/components/FVButton'
 import IntlService from 'views/services/intl'
@@ -55,8 +59,6 @@ import {
   dictionaryListSmallScreenTemplateWords,
 } from 'views/components/Browsing/DictionaryListSmallScreen'
 import {
-  getCategoriesOrPhrasebooks,
-  getCharacters,
   handleDialectFilterList,
   onNavigateRequest,
   sortHandler,
@@ -103,57 +105,9 @@ class WordsFilteredByCategory extends Component {
     // Document
     ProviderHelpers.fetchIfMissing(`${routeParams.dialect_path}/Dictionary`, this.props.fetchDocument, computeDocument)
 
-    // Category
-    const pathOrId = `/api/v1/path/FV/${routeParams.area}/SharedData/Shared Categories/@children`
-    let categories = getCategoriesOrPhrasebooks({
-      getEntryId: pathOrId,
-      computeCategories: this.props.computeCategories,
-    })
-    if (categories === undefined) {
-      await this.props.fetchCategories(pathOrId)
-      categories = getCategoriesOrPhrasebooks({
-        getEntryId: pathOrId,
-        computeCategories: this.props.computeCategories,
-      })
-    }
-
-    // Alphabet
-    // ---------------------------------------------
-    let characters = getCharacters({
-      computeCharacters: this.props.computeCharacters,
-      routeParamsDialectPath: routeParams.dialect_path,
-    })
-
-    if (characters === undefined) {
-      const _pageIndex = 0
-      const _pageSize = 100
-
-      await this.props.fetchCharacters(
-        `${routeParams.dialect_path}/Alphabet`,
-        `&currentPageIndex=${_pageIndex}&pageSize=${_pageSize}&sortOrder=asc&sortBy=fvcharacter:alphabet_order`
-      )
-      characters = getCharacters({
-        computeCharacters: this.props.computeCharacters,
-        routeParamsDialectPath: routeParams.dialect_path,
-      })
-    }
-
     // WORDS
     // ---------------------------------------------
     this.fetchListViewData()
-
-    this.setState(
-      {
-        characters,
-        categories,
-      },
-      () => {
-        const letter = selectn('routeParams.letter', this.props)
-        if (letter) {
-          this.handleAlphabetClick(letter)
-        }
-      }
-    )
   }
 
   constructor(props, context) {
@@ -198,7 +152,7 @@ class WordsFilteredByCategory extends Component {
   }
 
   render() {
-    const { categories, characters, computeEntities, filterInfo, isKidsTheme } = this.state
+    const { computeEntities, filterInfo, isKidsTheme } = this.state
 
     const {
       computeDialect2,
@@ -303,9 +257,7 @@ class WordsFilteredByCategory extends Component {
         </PromiseWrapper>
       )
     }
-
     const dialectClassName = getDialectClassname(computedPortal)
-    const facetField = ProviderHelpers.switchWorkspaceSectionKeys('fv-word:categories', routeParams.area)
     return (
       <PromiseWrapper renderOnError computeEntities={computeEntities}>
         <div className="row row-create-wrapper">
@@ -346,39 +298,67 @@ class WordsFilteredByCategory extends Component {
         </div>
         <div className="row">
           <div className="col-xs-12 col-md-3 PrintHide">
-            <AlphabetListView
-              characters={characters}
-              dialectClassName={dialectClassName}
-              handleClick={this.handleAlphabetClick}
-              letter={selectn('letter', routeParams)}
-            />
-
-            <DialectFilterList
-              appliedFilterIds={new Set([routeParams.category])}
-              clearDialectFilter={this.clearDialectFilter}
-              facets={categories}
-              facetField={facetField}
-              filterInfo={filterInfo}
-              handleDialectFilterClick={this.handleCategoryClick}
-              handleDialectFilterList={(facetFieldParam, selected, unselected, type, shouldResetUrlPagination) => {
-                this.handleDialectFilterChange({
-                  facetField: facetFieldParam,
-                  selected,
-                  type,
-                  unselected,
-                  routeParams: routeParams,
-                  filterInfo: filterInfo,
-                  shouldResetUrlPagination,
-                })
+            <AlphabetListViewData>
+              {({
+                characters,
+                // dialectClassName, // TODO
+                letter,
+                // splitWindowPath, // TODO
+              }) => {
+                return (
+                  <AlphabetListView
+                    characters={characters}
+                    dialectClassName={dialectClassName}
+                    handleClick={(letterClicked, href) => {
+                      NavigationHelpers.navigate(href, this.props.pushWindowPath, false)
+                    }}
+                    letter={letter}
+                    splitWindowPath={splitWindowPath}
+                  />
+                )
               }}
-              routeParams={routeParams}
-              title={intl.trans(
-                'views.pages.explore.dialect.learn.words.browse_by_category',
-                'Browse Categories',
-                'words'
-              )}
-              type={this.DIALECT_FILTER_TYPE}
-            />
+            </AlphabetListViewData>
+            <DialectFilterListData
+              workspaceKey="fv-word:categories"
+              path={`/api/v1/path/FV/${routeParams.area}/SharedData/Shared Categories/@children`}
+            >
+              {({ facetField, facets }) => {
+                return (
+                  <DialectFilterList
+                    appliedFilterIds={new Set([routeParams.category])}
+                    clearDialectFilter={this.clearDialectFilter}
+                    facets={facets}
+                    facetField={facetField}
+                    filterInfo={filterInfo}
+                    handleDialectFilterClick={this.handleCategoryClick}
+                    handleDialectFilterList={(
+                      facetFieldParam,
+                      selected,
+                      unselected,
+                      type,
+                      shouldResetUrlPagination
+                    ) => {
+                      this.handleDialectFilterChange({
+                        facetField: facetFieldParam,
+                        selected,
+                        type,
+                        unselected,
+                        routeParams: routeParams,
+                        filterInfo: filterInfo,
+                        shouldResetUrlPagination,
+                      })
+                    }}
+                    routeParams={routeParams}
+                    title={intl.trans(
+                      'views.pages.explore.dialect.learn.words.browse_by_category',
+                      'Browse Categories',
+                      'words'
+                    )}
+                    type={this.DIALECT_FILTER_TYPE}
+                  />
+                )
+              }}
+            </DialectFilterListData>
           </div>
           <div className="col-xs-12 col-md-9">
             <h1 className="DialectPageTitle">{pageTitle}</h1>

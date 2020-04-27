@@ -234,8 +234,46 @@ class WordsListView extends DataListView {
       '_handleSortChange', // Note: comes from DataListView
       '_handleColumnOrderChange', // Note: comes from DataListView
       '_resetColumns', // Note: comes from DataListView
-      // '_fetchData2', // now an arrow fn, no need for binding, looks like it's not being used though
+      // '_fetchData2', // now an arrow fn, no need for binding, seems like it's not being used
     ].forEach((method) => (this[method] = this[method].bind(this)))
+  }
+
+  generateNql = ({ filter, letter, pageSize, pageIndex, sortOrder, sortBy }) => {
+    let currentAppliedFilter = ''
+    if (filter.has('currentAppliedFilter')) {
+      currentAppliedFilter = Object.values(filter.get('currentAppliedFilter').toJS()).join('')
+    }
+    // WORKAROUND: DY @ 17-04-2019 - Mark this query as a "starts with" query. See DirectoryOperations.js for note
+    // const startsWithQuery = ProviderHelpers.isStartsWithQuery(currentAppliedFilter)
+    const startsWithQuery = letter
+      ? `&letter=${letter}&starts_with_query=Document.CustomOrderQuery`
+      : ProviderHelpers.isStartsWithQuery(currentAppliedFilter)
+    const nql = `${currentAppliedFilter}&currentPageIndex=${pageIndex - 1}&dialectId=${
+      this.props.dialectID
+    }&pageSize=${pageSize}&sortOrder=${sortOrder}&sortBy=${sortBy}&enrichment=category_children${startsWithQuery}`
+    return nql
+  }
+  componentDidUpdate(prevProps, prevState) {
+    const curNql = this.generateNql({
+      filter: this.props.filter,
+      letter: this.props.routeParams.letter,
+      pageSize: this.state.pageSize,
+      pageIndex: this.state.pageIndex,
+      sortOrder: this.state.sortOrder,
+      sortBy: this.state.sortBy,
+    })
+    const prevNql = this.generateNql({
+      filter: prevProps.filter,
+      letter: prevProps.routeParams.letter,
+      pageSize: prevState.pageSize,
+      pageIndex: prevState.pageIndex,
+      sortOrder: prevState.sortOrder,
+      sortBy: prevState.sortBy,
+    })
+    // NOTE: preventing double requests
+    if (curNql !== prevNql) {
+      this.props.fetchWords(this._getPathOrParentID(this.props), curNql)
+    }
   }
 
   _getPathOrParentID = (newProps) => {
@@ -243,6 +281,7 @@ class WordsListView extends DataListView {
   }
 
   // NOTE: DataListView calls `fetchData`
+  // NOTE: responsibility of caller to determine if fetchData should be called
   fetchData(newProps) {
     if (newProps.dialect === null && !this.getDialect(newProps)) {
       newProps.fetchDialect2(newProps.routeParams.dialect_path)
@@ -272,32 +311,12 @@ class WordsListView extends DataListView {
 
   // NOTE: DataListView calls `_fetchListViewData`
   _fetchListViewData(props, pageIndex, pageSize, sortOrder, sortBy) {
-    let currentAppliedFilter = ''
-
-    if (props.filter.has('currentAppliedFilter')) {
-      currentAppliedFilter = Object.values(props.filter.get('currentAppliedFilter').toJS()).join('')
-    }
-
-    // WORKAROUND: DY @ 17-04-2019 - Mark this query as a "starts with" query. See DirectoryOperations.js for note
-    const startsWithQuery = ProviderHelpers.isStartsWithQuery(currentAppliedFilter)
-
-    const nql = `${currentAppliedFilter}&currentPageIndex=${pageIndex - 1}&dialectId=${
-      this.props.dialectID
-    }&pageSize=${pageSize}&sortOrder=${sortOrder}&sortBy=${sortBy}
-        &enrichment='category_children'}${this.props.routeParams.letter ? `&letter=${this.props.routeParams.letter}
-        &starts_with_query=Document.CustomOrderQuery` : startsWithQuery}`
-    //console.log("fetchListViewData test")
-    // NOTE: this prevents double requests due to DataListView re-calling _fetchListViewData
-    if (this.state.nql !== nql) {
-      this.setState(
-        {
-          nql,
-        },
-        () => {
-          props.fetchWords(this._getPathOrParentID(props), nql)
-        }
-      )
-    }
+    this.setState({
+      pageIndex,
+      pageSize,
+      sortOrder,
+      sortBy,
+    })
   }
 
   getDialect(props = this.props) {

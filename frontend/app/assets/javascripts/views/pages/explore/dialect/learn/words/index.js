@@ -94,20 +94,26 @@ class PageDialectLearnWords extends Component {
               </div>
               <div className="row">
                 <div className="col-xs-12 col-md-3 PrintHide">
-                  <AlphabetListViewData changeFilter={changeFilter}>
-                    {({ characters, dialectClassName, handleAlphabetClick, letter }) => {
+                  <AlphabetListViewData>
+                    {({ characters, dialectClassName, letter }) => {
                       return (
                         <AlphabetListView
                           characters={characters}
                           dialectClassName={dialectClassName}
-                          handleClick={handleAlphabetClick}
+                          handleClick={(letterClicked, href) => {
+                            NavigationHelpers.navigate(href, pushWindowPath, false)
+                          }}
                           letter={letter}
+                          splitWindowPath={splitWindowPath}
                         />
                       )
                     }}
                   </AlphabetListViewData>
 
-                  <DialectFilterListData>
+                  <DialectFilterListData
+                    workspaceKey="fv-word:categories"
+                    path={`/api/v1/path/FV/${routeParams.area}/SharedData/Shared Categories/@children`}
+                  >
                     {({ facetField, facets }) => {
                       return (
                         <DialectFilterList

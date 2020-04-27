@@ -7,9 +7,6 @@ import { getDialectClassname } from 'views/pages/explore/dialect/helpers'
 // REDUX: actions/dispatch/func
 import { fetchDocument } from 'providers/redux/reducers/document'
 import { fetchCharacters } from 'providers/redux/reducers/fvCharacter'
-import { searchDialectUpdate } from 'providers/redux/reducers/searchDialect'
-
-import { SEARCH_BY_ALPHABET, SEARCH_PART_OF_SPEECH_ANY } from 'views/components/SearchDialect/constants'
 
 class AlphabetListViewData extends Component {
   constructor(props) {
@@ -31,81 +28,57 @@ class AlphabetListViewData extends Component {
     const extractComputePortal = ProviderHelpers.getEntry(computePortal, `${routeParams.dialect_path}/Portal`)
     const dialectClassName = getDialectClassname(extractComputePortal)
 
-    this.setState(
-      {
-        characters,
-        dialectClassName,
-      },
-      () => {
-        if (routeParams.letter) {
-          this.handleAlphabetClick(routeParams.letter)
-        }
-      }
-    )
+    this.setState({
+      characters,
+      dialectClassName,
+    })
   }
   render() {
     const { characters, dialectClassName } = this.state
     return this.props.children({
-      dialectClassName,
       characters,
-      handleAlphabetClick: this.handleAlphabetClick,
+      dialectClassName,
       letter: this.props.routeParams.letter,
+      splitWindowPath: this.props.splitWindowPath,
     })
-  }
-
-  handleAlphabetClick = async (letter, href, updateHistory = true) => {
-    await this.props.searchDialectUpdate({
-      searchByAlphabet: letter,
-      searchByMode: SEARCH_BY_ALPHABET,
-      searchBySettings: {
-        searchByTitle: true,
-        searchByDefinitions: false,
-        searchByTranslations: false,
-        searchPartOfSpeech: SEARCH_PART_OF_SPEECH_ANY,
-      },
-      searchTerm: '',
-    })
-    this.props.changeFilter({ href, updateHistory })
   }
 }
 
 // PROPTYPES
-const { any, func, object } = PropTypes
+const { any, array, func, object } = PropTypes
 AlphabetListViewData.propTypes = {
   children: any,
-  changeFilter: func.isRequired,
   // REDUX: reducers/state
   computeCharacters: object.isRequired,
   computeLogin: object.isRequired,
   computePortal: object.isRequired,
   routeParams: object.isRequired,
+  splitWindowPath: array.isRequired,
   // REDUX: actions/dispatch/func
   fetchDocument: func.isRequired,
   fetchCharacters: func.isRequired,
 }
-AlphabetListViewData.defaultProps = {
-  changeFilter: () => {},
-}
 
 // REDUX: reducers/state
 const mapStateToProps = (state) => {
-  const { fvCharacter, fvPortal, navigation, nuxeo } = state
+  const { fvCharacter, fvPortal, navigation, nuxeo, windowPath } = state
   const { computePortal } = fvPortal
   const { route } = navigation
   const { computeLogin } = nuxeo
   const { computeCharacters } = fvCharacter
+  const { splitWindowPath } = windowPath
   return {
     computePortal,
     computeCharacters,
     computeLogin,
     routeParams: route.routeParams,
+    splitWindowPath,
   }
 }
 // REDUX: actions/dispatch/func
 const mapDispatchToProps = {
   fetchDocument,
   fetchCharacters,
-  searchDialectUpdate,
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(AlphabetListViewData)
