@@ -41,7 +41,11 @@ import PageDialectLearnBase from 'views/pages/explore/dialect/learn/base'
 import PhraseListView from 'views/pages/explore/dialect/learn/phrases/list-view'
 
 import DialectFilterList from 'views/components/DialectFilterList'
+import DialectFilterListData from 'views/components/DialectFilterList/DialectFilterListData'
+
 import AlphabetListView from 'views/components/AlphabetListView'
+import AlphabetListViewData from 'views/components/AlphabetListView/AlphabetListViewData'
+
 import FVLabel from 'views/components/FVLabel/index'
 
 import { getDialectClassname } from 'views/pages/explore/dialect/helpers'
@@ -100,34 +104,11 @@ export class PageDialectLearnPhrases extends PageDialectLearnBase {
       this.props.computeDocument
     )
 
-    // Phrasebooks (Category)
-    let phraseBooks = this.getPhraseBooks()
-    if (phraseBooks === undefined) {
-      await this.props.fetchCategories(
-        '/api/v1/path/' + this.props.routeParams.dialect_path + '/Phrase Books/@children'
-      )
-      phraseBooks = this.getPhraseBooks()
-    }
-
-    // Alphabet
-    // ---------------------------------------------
-    let characters = this.getCharacters()
-
-    if (characters === undefined) {
-      const _pageIndex = 0
-      const _pageSize = 100
-      await this.props.fetchCharacters(
-        `${routeParams.dialect_path}/Alphabet`,
-        `&currentPageIndex=${_pageIndex}&pageSize=${_pageSize}&sortOrder=asc&sortBy=fvcharacter:alphabet_order`
-      )
-      characters = this.getCharacters()
-    }
-
     const newState = {
-      characters,
-      phraseBooks,
-      dialectId : selectn("response.contextParameters.ancestry.dialect.uid",
-          ProviderHelpers.getEntry(this.props.computeDocument, routeParams.dialect_path + '/Dictionary'))
+      dialectId: selectn(
+        'response.contextParameters.ancestry.dialect.uid',
+        ProviderHelpers.getEntry(this.props.computeDocument, routeParams.dialect_path + '/Dictionary')
+      ),
     }
 
     // Clear out filterInfo if not in url, eg: /learn/words/categories/[category]
@@ -135,12 +116,7 @@ export class PageDialectLearnPhrases extends PageDialectLearnBase {
       newState.filterInfo = this.initialFilterInfo()
     }
 
-    this.setState(newState, () => {
-      const letter = selectn('routeParams.letter', this.props)
-      if (letter) {
-        this.handleAlphabetClick(letter)
-      }
-    })
+    this.setState(newState)
   }
 
   constructor(props, context) {
@@ -322,31 +298,51 @@ export class PageDialectLearnPhrases extends PageDialectLearnBase {
         </div>
         <div className="row">
           <div className={classNames('col-xs-12', 'col-md-3', 'PrintHide')}>
-            <AlphabetListView
-              characters={this.state.characters}
-              dialectClassName={dialectClassName}
-              handleClick={this.handleAlphabetClick}
-              letter={selectn('routeParams.letter', this.props)}
-            />
+            <AlphabetListViewData>
+              {({
+                characters,
+                // dialectClassName,
+                letter,
+                splitWindowPath,
+              }) => {
+                return (
+                  <AlphabetListView
+                    characters={characters}
+                    dialectClassName={dialectClassName}
+                    handleClick={(letterClicked, href) => {
+                      NavigationHelpers.navigate(href, this.props.pushWindowPath, false)
+                    }}
+                    letter={letter}
+                    splitWindowPath={splitWindowPath}
+                  />
+                )
+              }}
+            </AlphabetListViewData>
             {computePhraseBooksSize !== 0 && (
-              <DialectFilterList
-                appliedFilterIds={this.state.filterInfo.get('currentCategoryFilterIds')}
-                // clearDialectFilter={this.clearDialectFilter} // TODO: NOT IN WORDS
-                facetField={ProviderHelpers.switchWorkspaceSectionKeys(
-                  'fv-phrase:phrase_books',
-                  this.props.routeParams.area
-                )}
-                facets={this.state.phraseBooks} // TODO: NOT IN WORDS
-                handleDialectFilterClick={this.handlePhraseBookClick} // TODO: NOT IN WORDS
-                handleDialectFilterList={this.handleDialectFilterList} // NOTE: This function is in PageDialectLearnBase
-                routeParams={this.props.routeParams}
-                title={this.props.intl.trans(
-                  'views.pages.explore.dialect.learn.phrases.browse_by_phrase_books',
-                  'Browse Phrase Books',
-                  'words'
-                )}
-                type={this.DIALECT_FILTER_TYPE}
-              />
+              <DialectFilterListData
+                workspaceKey="fv-phrase:phrase_books"
+                path={`/api/v1/path/${this.props.routeParams.dialect_path}/Phrase Books/@children`}
+              >
+                {({ facetField, facets }) => {
+                  return (
+                    <DialectFilterList
+                      appliedFilterIds={this.state.filterInfo.get('currentCategoryFilterIds')}
+                      // clearDialectFilter={this.clearDialectFilter} // TODO: NOT IN WORDS
+                      facetField={facetField}
+                      facets={facets} // TODO: NOT IN WORDS
+                      handleDialectFilterClick={this.handlePhraseBookClick} // TODO: NOT IN WORDS
+                      handleDialectFilterList={this.handleDialectFilterList} // NOTE: This function is in PageDialectLearnBase
+                      routeParams={this.props.routeParams}
+                      title={this.props.intl.trans(
+                        'views.pages.explore.dialect.learn.phrases.browse_by_phrase_books',
+                        'Browse Phrase Books',
+                        'words'
+                      )}
+                      type={this.DIALECT_FILTER_TYPE}
+                    />
+                  )
+                }}
+              </DialectFilterListData>
             )}
           </div>
           <div className={classNames('col-xs-12', 'col-md-9')}>
@@ -405,38 +401,6 @@ export class PageDialectLearnPhrases extends PageDialectLearnBase {
   // NOTE: PageDialectLearnBase calls `fetchData`
   // NOTE: Providing an empty fn() so that PageDialectLearnBase doesn't complain.
   fetchData() {}
-
-  getCharacters = () => {
-    const { routeParams } = this.props
-    const computedCharacters = ProviderHelpers.getEntry(
-      this.props.computeCharacters,
-      `${routeParams.dialect_path}/Alphabet`
-    )
-    return selectn('response.entries', computedCharacters)
-  }
-
-  getPhraseBooks = () => {
-    const computeCategories = ProviderHelpers.getEntry(
-      this.props.computeCategories,
-      '/api/v1/path/' + this.props.routeParams.dialect_path + '/Phrase Books/@children'
-    )
-    return selectn('response.entries', computeCategories)
-  }
-  handleAlphabetClick = async (letter, href, updateHistory = true) => {
-    await this.props.searchDialectUpdate({
-      searchByAlphabet: letter,
-      searchByMode: SEARCH_BY_ALPHABET,
-      searchBySettings: {
-        searchByDefinitions: false,
-        searchByTitle: true,
-        searchByTranslations: false,
-        searchPartOfSpeech: SEARCH_PART_OF_SPEECH_ANY,
-      },
-      searchTerm: '',
-    })
-
-    this.changeFilter(href, updateHistory)
-  }
 
   handlePhraseBookClick = async ({ facetField, selected, unselected, href } = {}, updateHistory = true) => {
     await this.props.searchDialectUpdate({
