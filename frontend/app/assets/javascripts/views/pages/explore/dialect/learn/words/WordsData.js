@@ -77,6 +77,7 @@ class WordsData extends PageDialectLearnBase {
       flashcardMode,
       isKidsTheme,
       changeFilter: this.changeFilter,
+      clearDialectFilter: this.clearDialectFilter,
       resetSearch: this.resetSearch,
       handleDialectFilterList: this.handleDialectFilterList, // NOTE: This function is in PageDialectLearnBase
       splitWindowPath: this.props.splitWindowPath,
@@ -148,6 +149,44 @@ class WordsData extends PageDialectLearnBase {
         }
       })
     }
+  }
+  // via wordsFilteredByCategory
+  /*
+  changeFilter = () => {
+    const { filterInfo } = this.state
+    const { computeSearchDialect, routeParams, splitWindowPath } = this.props
+    const { searchByMode, searchNxqlQuery } = computeSearchDialect
+
+    const newFilter = updateFilter({
+      filterInfo,
+      searchByMode,
+      searchNxqlQuery,
+    })
+
+    // When facets change, pagination should be reset.
+    // In these pages (words/phrase), list views are controlled via URL
+    if (is(filterInfo, newFilter) === false) {
+      this.setState({ filterInfo: newFilter }, () => {
+        // NOTE: `updateUrlIfPageOrPageSizeIsDifferent` below can trigger FW-256:
+        // "Back button is not working properly when paginating within alphabet chars
+        // (Navigate to /learn/words/alphabet/a/1/1 - go to page 2, 3, 4. Use back button.
+        // You will be sent to the first page)"
+        //
+        // The above test (`is(...) === false`) prevents updates triggered by back or forward buttons
+        // and any other unnecessary updates (ie: the filter didn't change)
+        updateUrlIfPageOrPageSizeIsDifferent({
+          // pageSize, // TODO ?
+          preserveSearch: true,
+          pushWindowPath: this.props.pushWindowPath,
+          routeParams,
+          splitWindowPath,
+        })
+      })
+    }
+  }
+*/
+  clearDialectFilter = () => {
+    this.setState({ filterInfo: this.initialFilterInfo() })
   }
 
   // NOTE: PageDialectLearnBase calls `fetchData`
