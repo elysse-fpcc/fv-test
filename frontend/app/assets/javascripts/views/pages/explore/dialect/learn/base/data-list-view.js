@@ -39,31 +39,6 @@ export default class DataListView extends Component {
     }
   }
 
-  static propTypes = {
-    controlViaURL: PropTypes.any, // TODO: set appropriate propType
-    routeParams: PropTypes.any, // TODO: set appropriate propType
-    DEFAULT_PAGE: PropTypes.number,
-    DEFAULT_PAGE_SIZE: PropTypes.number,
-    DEFAULT_SORT_TYPE: PropTypes.string,
-    DEFAULT_SORT_COL: PropTypes.any, // TODO: set appropriate propType
-    windowPath: PropTypes.any, // TODO: set appropriate propType
-    filter: PropTypes.any, // TODO: set appropriate propType
-    pushWindowPath: PropTypes.any, // TODO: set appropriate propType
-    splitWindowPath: PropTypes.any, // TODO: set appropriate propType
-    onPaginationReset: PropTypes.any, // TODO: set appropriate propType
-    DISABLED_SORT_COLS: PropTypes.any, // TODO: set appropriate propType
-    onPagePropertiesChange: PropTypes.any, // TODO: set appropriate propType
-  }
-
-  static defaultProps = {
-    DISABLED_SORT_COLS: ['state', 'related_audio'],
-    DEFAULT_PAGE: 1,
-    DEFAULT_PAGE_SIZE: 100,
-    DEFAULT_LANGUAGE: 'english',
-    DEFAULT_SORT_COL: 'fvcharacter:alphabet_order',
-    DEFAULT_SORT_TYPE: 'asc',
-  }
-
   // NOTE: The `class` that `extends` `DataListView` must define a `fetchData` function
   fetchData() {
     // eslint-disable-next-line
@@ -88,6 +63,7 @@ export default class DataListView extends Component {
     const _sortOrder = selectn(['navigationRouteSearch', 'sortOrder'], this.props) || this.props.DEFAULT_SORT_TYPE
     const _sortBy = selectn(['navigationRouteSearch', 'sortBy'], this.props) || this.props.DEFAULT_SORT_COL
     if (this.props.controlViaURL) {
+      // When controlViaUrl and the routeParams[page || pageSize] change, fetch data
       if (
         this.props.routeParams.page !== prevProps.routeParams.page ||
         this.props.routeParams.pageSize !== prevProps.routeParams.pageSize
@@ -96,6 +72,7 @@ export default class DataListView extends Component {
         this._resetPagination(this.props)
       }
     } else {
+      // If we aren't controlViaUrl, check for differences in the windowPath or routeParms and fetch data
       if (
         routeHasChanged({
           prevWindowPath: prevProps.windowPath,
@@ -109,11 +86,13 @@ export default class DataListView extends Component {
       }
     }
 
+    // If workpaces or sections in the url has changed, reset some things
     if (this.props.routeParams.area !== prevProps.routeParams.area) {
       this._resetColumns(this.props)
       this._resetPagination(this.props)
     }
 
+    // If the filter changes, fetch data
     if (
       prevProps.filter.has('currentAppliedFilter') &&
       !prevProps.filter.get('currentAppliedFilter').equals(this.props.filter.get('currentAppliedFilter'))
@@ -329,4 +308,31 @@ export default class DataListView extends Component {
       },
     })
   }
+}
+
+// Proptypes
+const { any, array, bool, func, number, object, string } = PropTypes
+DataListView.propTypes = {
+  controlViaURL: bool,
+  DEFAULT_PAGE_SIZE: number,
+  DEFAULT_PAGE: number,
+  DEFAULT_SORT_COL: string,
+  DEFAULT_SORT_TYPE: string,
+  DISABLED_SORT_COLS: array,
+  filter: any, // TODO: set appropriate propType
+  onPagePropertiesChange: any, // TODO: set appropriate propType
+  onPaginationReset: any, // TODO: set appropriate propType
+  pushWindowPath: func,
+  routeParams: object,
+  splitWindowPath: array,
+  windowPath: string,
+}
+
+DataListView.defaultProps = {
+  DISABLED_SORT_COLS: ['state', 'related_audio'],
+  DEFAULT_PAGE: 1,
+  DEFAULT_PAGE_SIZE: 100,
+  DEFAULT_LANGUAGE: 'english',
+  DEFAULT_SORT_COL: 'fvcharacter:alphabet_order',
+  DEFAULT_SORT_TYPE: 'asc',
 }
