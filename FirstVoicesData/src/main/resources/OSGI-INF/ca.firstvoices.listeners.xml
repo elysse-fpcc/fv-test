@@ -5,12 +5,17 @@
     <require>ca.firstvoices.services.CleanupCharactersService</require>
     <extension point="listener" target="org.nuxeo.ecm.core.event.EventServiceComponent">
         <listener enabled="true" name="fvdocumentlistener" async="false" postCommit="false"
-                  class="ca.firstvoices.listeners.FVDocumentListener" priority="100">
+          class="ca.firstvoices.listeners.FVDocumentListener" priority="100">
             <event>documentCreated</event>
             <event>beforeDocumentModification</event>
             <event>aboutToCreate</event>
             <event>documentModified</event>
         </listener>
+
+        <event>beforeDocumentModification</event>
+        <listener async="false" class="ca.firstvoices.listeners.PropertyModifiedAuditListener"
+          name="documentTrailListener"
+          postCommit="false" priority="1000">
     </extension>
 
 </component>
