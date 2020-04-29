@@ -12,7 +12,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-import React, { Component } from 'react'
+import React, { Component, Suspense } from 'react'
 
 import NavigationHelpers, { appendPathArrayAfterLandmark } from 'common/NavigationHelpers'
 import FVLabel from 'views/components/FVLabel/index'
@@ -21,16 +21,17 @@ import FVLabel from 'views/components/FVLabel/index'
 import WordsData from 'views/pages/explore/dialect/learn/words/WordsData'
 
 import AuthorizationFilter from 'views/components/Document/AuthorizationFilter'
+// TODO: AuthorizationFilterData is tailored to words index, not ready to be rolled out to other files.
 import AuthorizationFilterData from 'views/components/Document/AuthorizationFilter/AuthorizationFilterData'
 
 import DialectFilterList from 'views/components/DialectFilterList'
 import DialectFilterListData from 'views/components/DialectFilterList/DialectFilterListData'
 
-import WordsListView from 'views/pages/explore/dialect/learn/words/list-view'
-import WordsListViewData from 'views/pages/explore/dialect/learn/words/WordsListViewData'
-
 import AlphabetListView from 'views/components/AlphabetListView'
 import AlphabetListViewData from 'views/components/AlphabetListView/AlphabetListViewData'
+
+import DictionaryListData from 'views/components/Browsing/DictionaryListData'
+const DictionaryList = React.lazy(() => import('views/components/Browsing/DictionaryList'))
 
 class PageDialectLearnWords extends Component {
   render() {
@@ -39,7 +40,7 @@ class PageDialectLearnWords extends Component {
         {({
           changeFilter,
           filterInfo,
-          flashcardMode,
+          // flashcardMode,
           handleDialectFilterList,
           intl,
           isKidsTheme,
@@ -111,23 +112,51 @@ class PageDialectLearnWords extends Component {
                   </AlphabetListViewData>
 
                   <DialectFilterListData
-                    workspaceKey="fv-word:categories"
+                    appliedFilterIds={filterInfo.get('currentCategoryFilterIds')}
                     path={`/api/v1/path/FV/${routeParams.area}/SharedData/Shared Categories/@children`}
+                    workspaceKey="fv-word:categories"
+                    handleDialectFilterClick={() => {
+                      /*console.log('handleDialectFilterClick')*/
+                    }}
+                    handleDialectFilterList={handleDialectFilterList}
+                    handleDialectFilterListClick={async ({ facetField, selected, unselected }) => {
+                      // eslint-disable-next-line
+                      console.log('handleDialectFilterListClick', { facetField, selected, unselected })
+                      // await this.props.searchDialectUpdate({
+                      //   searchByAlphabet: '',
+                      //   searchByMode: SEARCH_BY_CATEGORY,
+                      //   searchBySettings: {
+                      //     searchByTitle: true,
+                      //     searchByDefinitions: false,
+                      //     searchByTranslations: false,
+                      //     searchPartOfSpeech: SEARCH_PART_OF_SPEECH_ANY,
+                      //   },
+                      //   searchingDialectFilter: selected.checkedFacetUid,
+                      //   searchTerm: '',
+                      // })
+
+                      // this.changeFilter()
+
+                      // this.handleDialectFilterChange({
+                      //   facetField,
+                      //   selected,
+                      //   type: this.DIALECT_FILTER_TYPE,
+                      //   unselected,
+                      // })
+                    }}
                   >
-                    {({ facetField, facets }) => {
+                    {({ listItems, listItemsData }) => {
+                      // eslint-disable-next-line
+                      console.log('??', listItems, listItemsData)
                       return (
                         <DialectFilterList
-                          appliedFilterIds={filterInfo.get('currentCategoryFilterIds')}
-                          facetField={facetField}
-                          facets={facets}
-                          handleDialectFilterList={handleDialectFilterList}
-                          routeParams={routeParams}
                           title={intl.trans(
                             'views.pages.explore.dialect.learn.words.browse_by_category',
                             'Browse Categories',
                             'words'
                           )}
-                          type="words"
+                          listItems={listItems}
+                          listItemsData={listItemsData}
                         />
                       )
                     }}
@@ -135,61 +164,83 @@ class PageDialectLearnWords extends Component {
                 </div>
 
                 <div className="col-xs-12 col-md-9">
-                  <WordsListViewData>
+                  <DictionaryListData>
                     {({
+                      columns,
+                      // computeDocumentResponse,
+                      dialect,
                       dialectClassName,
-                      dialectUid,
+                      // dialectUid,
+                      fetcher,
+                      fetcherParams,
+                      items,
                       listViewMode,
-                      page,
-                      pageSize,
+                      metadata,
+                      // page,
+                      // pageSize,
                       pageTitle,
                       parentId,
+                      // routeParams,
                       setListViewMode,
-                      sortCol,
-                      sortType,
+                      smallScreenTemplate,
+                      // sortCol,
+                      sortHandler,
+                      // sortType,
                     }) => {
                       const wordListView = parentId ? (
-                        <WordsListView
-                          controlViaURL
-                          DEFAULT_PAGE={page}
-                          DEFAULT_PAGE_SIZE={pageSize}
-                          DEFAULT_SORT_COL={sortCol}
-                          DEFAULT_SORT_TYPE={sortType}
-                          disableClickItem={false}
-                          filter={filterInfo}
-                          flashcard={flashcardMode}
-                          flashcardTitle={pageTitle}
-                          parentID={parentId}
-                          dialectID={dialectUid}
-                          routeParams={routeParams}
-                          // Search:
-                          handleSearch={changeFilter}
-                          resetSearch={resetSearch}
-                          hasSearch
-                          searchUi={[
-                            {
-                              defaultChecked: true,
-                              idName: 'searchByTitle',
-                              labelText: 'Word',
-                            },
-                            {
-                              defaultChecked: true,
-                              idName: 'searchByDefinitions',
-                              labelText: 'Definitions',
-                            },
-                            {
-                              idName: 'searchByTranslations',
-                              labelText: 'Literal translations',
-                            },
-                            {
-                              type: 'select',
-                              idName: 'searchPartOfSpeech',
-                              labelText: 'Parts of speech:',
-                            },
-                          ]}
-                          dictionaryListClickHandlerViewMode={setListViewMode}
-                          dictionaryListViewMode={listViewMode}
-                        />
+                        <Suspense fallback={<div>Loading...</div>}>
+                          <DictionaryList
+                            dictionaryListClickHandlerViewMode={setListViewMode}
+                            dictionaryListViewMode={listViewMode}
+                            dictionaryListSmallScreenTemplate={smallScreenTemplate}
+                            flashcardTitle={pageTitle}
+                            dialect={dialect}
+                            // ==================================================
+                            // Search
+                            // --------------------------------------------------
+                            handleSearch={changeFilter}
+                            resetSearch={resetSearch}
+                            hasSearch
+                            searchUi={[
+                              {
+                                defaultChecked: true,
+                                idName: 'searchByTitle',
+                                labelText: 'Word',
+                              },
+                              {
+                                defaultChecked: true,
+                                idName: 'searchByDefinitions',
+                                labelText: 'Definitions',
+                              },
+                              {
+                                idName: 'searchByTranslations',
+                                labelText: 'Literal translations',
+                              },
+                              {
+                                type: 'select',
+                                idName: 'searchPartOfSpeech',
+                                labelText: 'Parts of speech:',
+                              },
+                            ]}
+                            // ==================================================
+                            // Table data
+                            // --------------------------------------------------
+                            items={items}
+                            columns={columns}
+                            // ===============================================
+                            // Pagination
+                            // -----------------------------------------------
+                            hasPagination
+                            fetcher={fetcher}
+                            fetcherParams={fetcherParams}
+                            metadata={metadata}
+                            // ===============================================
+                            // Sort
+                            // -----------------------------------------------
+                            sortHandler={sortHandler}
+                            // ===============================================
+                          />
+                        </Suspense>
                       ) : null
 
                       // Render kids or mobile view
@@ -220,7 +271,7 @@ class PageDialectLearnWords extends Component {
                         </>
                       )
                     }}
-                  </WordsListViewData>
+                  </DictionaryListData>
                 </div>
               </div>
             </>
