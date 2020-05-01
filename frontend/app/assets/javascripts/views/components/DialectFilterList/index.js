@@ -1,77 +1,74 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
+import Link from 'views/components/Link'
+
 export class DialectFilterList extends Component {
   render() {
-    const { title, listItems /*, listItemsData*/ } = this.props
+    const { title, listItemsData } = this.props
     return (
       <div className="DialectFilterList" data-testid="DialectFilterList">
         <h2>{title}</h2>
-        <ul className="DialectFilterListList DialectFilterListList--root">{listItems}</ul>
-        {/* { listItemsData.length === 0 && this.componentHasNoData() } */}
-        {/* { listItemsData.length !== 0 && this.componentHasData() } */}
+        {listItemsData.length === 0 && this.componentHasNoData()}
+        {listItemsData.length !== 0 && this.componentHasData()}
       </div>
     )
   }
   componentHasData = () => {
-    // const {listItemsData} = this.props
-    return (
-      <ul className="DialectFilterListList DialectFilterListList--root">
-        {() => {
-          return <li>WIP</li>
-          /*
-      listItemsData.map((item, index) => {
-        if (item.children.length > 0) {
-          item.children.map((child, childIndex) => {
+    const { listItemsData } = this.props
+    const listItems = listItemsData.map((parent) => {
+      const {
+        isActive: parentIsActive,
+        hasActiveChild: parentHasActiveChild,
+        uid: parentUid,
+        text: parentText,
+        href: parentHref,
+      } = parent
+      const parentActiveClass = parentIsActive ? 'DialectFilterListLink--active' : ''
 
-// hasActiveParent: false
-// href: "/explore/FV/sections/Data/Test/Test/TestLanguageSix/learn/words/categories/61e20652-96a6-44e8-8b3b-a5e3aac350ea"
-// isActive: false
-// text: "Amphibians"
-// uid: "61e20652-96a6-44e8-8b3b-a5e3aac350ea"
+      const childrenNodes =
+        parent.children.length > 0
+          ? parent.children.map((child) => {
+              const { isActive: childIsActive, uid: childUid, text: childText, href: childHref } = child
 
-            let childActiveClass = ''
-            if (parentActiveClass) {
-              childActiveClass = 'DialectFilterListLink--activeParent'
-            } else if (childIsActive) {
-              childActiveClass = 'DialectFilterListLink--active'
-            }
-            // Save markup
-            const childListItem = (
-              <li key={uidChild}>
-                <Link
-                  className={`DialectFilterListLink DialectFilterListLink--child ${childActiveClass}`}
-                  href={childHref}
-                  title={filterChild.title}
-                >
-                  {filterChild.title}
-                </Link>
-              </li>
-            )
-            childrenItems.push(childListItem)
-          })
-        }
-        const listItemActiveClass = parentIsActive || hasActiveChild ? 'DialectFilterListItemParent--active' : ''
+              let childActiveClass = ''
+              if (parentActiveClass) {
+                childActiveClass = 'DialectFilterListLink--activeParent'
+              }
+              if (childIsActive) {
+                childActiveClass = 'DialectFilterListLink--active'
+              }
+              return (
+                <li key={childUid}>
+                  <Link
+                    className={`DialectFilterListLink DialectFilterListLink--child ${childActiveClass}`}
+                    href={childHref}
+                    title={childText}
+                  >
+                    {childText}
+                  </Link>
+                </li>
+              )
+            })
+          : null
 
-        const parentListItem = (
-          <li key={uidParent} className={`DialectFilterListItemParent ${listItemActiveClass}`}>
-            <div className="DialectFilterListItemGroup">
-              <Link
-                className={`DialectFilterListLink DialectFilterListLink--parent ${parentActiveClass}`}
-                href={parentHref}
-                title={filter.title}
-              >
-                {filter.title}
-              </Link>
-            </div>
-            {childrenItems.length > 0 ? <ul className="DialectFilterListList">{childrenItems}</ul> : null}
-          </li>
-        )
-        return parentListItem
-      })
-      */
-        }}
-      </ul>
-    )
+      const parentActiveChildClass = parentHasActiveChild ? 'DialectFilterListLink--activeChild' : ''
+      return (
+        <li key={parentUid} className={`DialectFilterListItemParent ${parentActiveClass} ${parentActiveChildClass}`}>
+          <div className="DialectFilterListItemGroup">
+            <Link
+              className={`DialectFilterListLink DialectFilterListLink--parent ${parentActiveClass}`}
+              href={parentHref}
+              title={parentText}
+            >
+              {parentText}
+            </Link>
+          </div>
+          {childrenNodes && <ul className="DialectFilterListList">{childrenNodes}</ul>}
+        </li>
+      )
+    })
+
+    return listItems ? <ul className="DialectFilterListList DialectFilterListList--root">{listItems}</ul> : null
   }
   componentHasNoData = () => {
     return null
@@ -79,10 +76,9 @@ export class DialectFilterList extends Component {
 }
 
 // Proptypes
-const { any, array, string } = PropTypes
+const { array, string } = PropTypes
 DialectFilterList.propTypes = {
   title: string.isRequired,
-  listItems: any.isRequired,
   listItemsData: array.isRequired,
 }
 
