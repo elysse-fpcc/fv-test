@@ -1,10 +1,10 @@
 import { combineReducers } from 'redux'
 import StringHelpers, { CLEAN_NXQL } from 'common/StringHelpers'
-import { SEARCH_DIALECT_UPDATE } from './actionTypes'
+import { SEARCH_DIALECT_UPDATE, SEARCH_DIALECT_RESET } from './actionTypes'
 import {
   SEARCH_PART_OF_SPEECH_ANY,
   SEARCH_BY_DEFAULT,
-  SEARCH_BY_ALPHABET,
+  // SEARCH_BY_ALPHABET,
   SEARCH_BY_CATEGORY,
   SEARCH_BY_PHRASE_BOOK,
   SEARCH_TYPE_DEFAULT_SEARCH,
@@ -78,7 +78,6 @@ const switchSearchModes = (searchField, searchValue, searchType) => {
 }
 
 const generateNxql = ({
-  searchByAlphabet: _searchByAlphabet,
   searchByMode: _searchByMode,
   searchBySettings: _searchBySettings = {},
   searchTerm: _searchTerm,
@@ -95,7 +94,6 @@ const generateNxql = ({
   let searchValue = StringHelpers.clean(_searchTerm, CLEAN_NXQL) || ''
   searchValue = searchValue.trim()
 
-  const searchByAlphabetValue = StringHelpers.clean(_searchByAlphabet, CLEAN_NXQL) || ''
   const nxqlTmpl = {
     // Use full text seach on dictionary for broad matches;
     // And approximate search as a fall back for close matches
@@ -104,7 +102,7 @@ const generateNxql = ({
       `${switchSearchModes('fv:definitions/*/translation', searchValue, _searchType)} OR ` +
       `${switchSearchModes('dc:title', searchValue, _searchType)}`,
     searchByTitle: switchSearchModes('dc:title', searchValue, _searchType),
-    searchByAlphabet: ``,//`dc:title ILIKE '${searchByAlphabetValue}%'`,
+    searchByAlphabet: '',
     searchByCategory: `dc:title ILIKE '%${searchValue}%'`,
     searchByPhraseBook: `dc:title ILIKE '%${searchValue}%'`,
     searchByCulturalNotes: `fv:cultural_note ILIKE '%${searchValue}%'`,
@@ -122,10 +120,6 @@ const generateNxql = ({
   }
 
   switch (_searchByMode) {
-    // case SEARCH_BY_ALPHABET: {
-    //   nxqlQueries.push(`${nxqlTmpl.searchByAlphabet}`)
-    //   break
-    // }
     case SEARCH_BY_CATEGORY: {
       nxqlQueries.push(`${nxqlTmpl.searchByCategory}`)
       break
@@ -306,6 +300,10 @@ const computeSearchDialect = (state = initialState, action) => {
       // Send out updated state
       // ------------------------------------------------------
       return newState
+    }
+
+    case SEARCH_DIALECT_RESET: {
+      return initialState
     }
 
     default:
