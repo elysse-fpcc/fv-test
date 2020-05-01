@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import { Component } from 'react'
 import { connect } from 'react-redux'
 import { Set } from 'immutable'
 import PropTypes from 'prop-types'
@@ -6,10 +6,9 @@ import ProviderHelpers from 'common/ProviderHelpers'
 import selectn from 'selectn'
 // REDUX: actions/dispatch/func
 import { fetchCategories } from 'providers/redux/reducers/fvCategory'
-import Link from 'views/components/Link'
 
 class DialectFilterListData extends Component {
-  clickParams = {}
+  historyData = {}
   filtersSorted = []
   _isMounted = false
   selectedDialectFilter = undefined
@@ -23,7 +22,6 @@ class DialectFilterListData extends Component {
       lastCheckedUid: undefined,
       lastCheckedChildrenUids: [],
       lastCheckedParentFacetUid: undefined,
-      listItems: [],
     }
   }
   async componentDidMount() {
@@ -47,10 +45,8 @@ class DialectFilterListData extends Component {
 
     // we have data, so...
     if (facets && facets.length > 0) {
-      // Sort data
       this.filtersSorted = this.sortDialectFilters(facets)
-      // generates markup
-      this.generateListItems(this.filtersSorted, true)
+      this.generateClickParamData(this.filtersSorted)
     }
 
     this.setState(
@@ -59,9 +55,9 @@ class DialectFilterListData extends Component {
       },
       () => {
         if (this.selectedDialectFilter) {
-          const selectedParams = this.clickParams[this.selectedDialectFilter]
+          const selectedParams = this.historyData[this.selectedDialectFilter]
           if (selectedParams) {
-            this.handleClick(selectedParams)
+            this.setSelected(selectedParams)
             this.selectedDialectFilter = undefined
           }
         }
@@ -72,6 +68,9 @@ class DialectFilterListData extends Component {
   componentWillUnmount() {
     this._isMounted = false
     window.removeEventListener('popstate', this.handleHistoryEvent)
+
+    // NOTE: Believe this stuff is legacy from a previous version of the category sidebar
+    // that could select multiple items. May be able to toss it but not 100% sure.
     const { lastCheckedUid, lastCheckedChildrenUids, lastCheckedParentFacetUid } = this.state
     // 'uncheck' previous
     if (lastCheckedUid) {
@@ -80,9 +79,12 @@ class DialectFilterListData extends Component {
         childrenIds: lastCheckedChildrenUids,
         parentFacetUid: lastCheckedParentFacetUid,
       }
-      // TODO: handleDialectFilterList?
-      debugger
-      this.props.handleDialectFilterList(this.state.facetField, undefined, unselected, this.props.type, false)
+      this.props.dialectFilterListWillUnmount({
+        facetField: this.state.facetField,
+        unselected,
+        type: this.props.type,
+        resetUrlPagination: false,
+      })
     }
   }
 
@@ -98,9 +100,10 @@ class DialectFilterListData extends Component {
     }
 
     if (prevFacets.length !== facets.length || prevAppliedFilterIds.equals(currentAppliedFilterIds) === false) {
-      this.generateListItems(this.filtersSorted, true)
+      this.generateClickParamData(this.filtersSorted)
     }
   }
+
   render() {
     return this.props.children({
       facetField: this.state.facetField,
@@ -108,7 +111,6 @@ class DialectFilterListData extends Component {
       routeParams: this.props.routeParams,
       facetSelected: this.props.routeParams.category,
 
-      listItems: this.state.listItems,
       listItemsData: this.generateListItemData(),
 
       lastCheckedUid: this.state.lastCheckedUid,
@@ -131,21 +133,7 @@ class DialectFilterListData extends Component {
     return href
   }
 
-  // Generates the nested list markup
-  /*
-[{
-  href,
-  isActive,
-  text,
-  children:[
-    {
-      href,
-      isActive,
-      text,
-    }
-  ]
-}]
-*/
+  // Generates data structure representing the list
   generateListItemData = () => {
     const { appliedFilterIds } = this.props
 
@@ -181,7 +169,7 @@ class DialectFilterListData extends Component {
         uid: uidParent,
         href: this.generateDialectFilterUrl(uidParent),
         isActive: parentIsActive,
-        hasActiveChildren: hasActiveChild,
+        hasActiveChild: hasActiveChild,
         text: filter.title,
         children: childData,
       })
@@ -189,131 +177,43 @@ class DialectFilterListData extends Component {
     return listItemData
   }
 
-  generateListItems = (filters, updateState = false) => {
-    const { appliedFilterIds } = this.props
-
-    let lastCheckedUid = undefined
-    let lastCheckedChildrenUids = undefined
-    let lastCheckedParentFacetUid = undefined
-
-    const listItems = filters.map((filter) => {
-      const childrenItems = []
-      const childrenUids = []
+  // Generates data used with history events
+  generateClickParamData = (filters) => {
+    filters.forEach((filter) => {
       const uidParent = filter.uid
 
-      const parentIsActive = appliedFilterIds.includes(uidParent)
-      const parentActiveClass = parentIsActive ? 'DialectFilterListLink--active' : ''
-
       // Process children
+      const childrenUids = []
       const children = selectn('contextParameters.children.entries', filter)
-      let hasActiveChild = false
       if (children.length > 0) {
         children.forEach((filterChild) => {
           const uidChild = filterChild.uid
 
           childrenUids.push(uidChild)
-          const childIsActive = appliedFilterIds.includes(uidChild)
 
-          let childActiveClass = ''
-          if (parentActiveClass) {
-            childActiveClass = 'DialectFilterListLink--activeParent'
-          } else if (childIsActive) {
-            childActiveClass = 'DialectFilterListLink--active'
-          }
-
-          if (childIsActive) {
-            hasActiveChild = true
-            lastCheckedUid = uidChild
-            lastCheckedChildrenUids = null
-            lastCheckedParentFacetUid = uidParent
-          }
-
-          const childHref = this.generateDialectFilterUrl(uidChild)
-          const childClickParams = {
-            href: childHref,
+          // Saving for history events
+          this.historyData[uidChild] = {
+            href: this.generateDialectFilterUrl(uidChild),
             checkedFacetUid: uidChild,
             childrenIds: null,
             parentFacetUid: uidParent,
           }
-
-          // Saving for history events
-          this.clickParams[uidChild] = childClickParams
-
-          // Save markup
-          const childListItem = (
-            <li key={uidChild}>
-              <Link
-                className={`DialectFilterListLink DialectFilterListLink--child ${childActiveClass}`}
-                href={childHref}
-                title={filterChild.title}
-              >
-                {filterChild.title}
-              </Link>
-            </li>
-          )
-          childrenItems.push(childListItem)
         })
       }
 
       // Process parent
-      const parentHref = this.generateDialectFilterUrl(uidParent)
-
-      if (parentIsActive) {
-        lastCheckedUid = uidParent
-        lastCheckedChildrenUids = childrenUids
-        lastCheckedParentFacetUid = undefined
-      }
-      const listItemActiveClass = parentIsActive || hasActiveChild ? 'DialectFilterListItemParent--active' : ''
       const parentClickParams = {
-        href: parentHref,
+        href: this.generateDialectFilterUrl(uidParent),
         checkedFacetUid: uidParent,
         childrenIds: childrenUids,
         parentFacetUid: undefined,
       }
-      // Saving for history events
-      this.clickParams[uidParent] = parentClickParams
-
-      const parentListItem = (
-        <li key={uidParent} className={`DialectFilterListItemParent ${listItemActiveClass}`}>
-          <div className="DialectFilterListItemGroup">
-            <Link
-              className={`DialectFilterListLink DialectFilterListLink--parent ${parentActiveClass}`}
-              href={parentHref}
-              title={filter.title}
-            >
-              {filter.title}
-            </Link>
-          </div>
-          {childrenItems.length > 0 ? <ul className="DialectFilterListList">{childrenItems}</ul> : null}
-        </li>
-      )
-      return parentListItem
+      this.historyData[uidParent] = parentClickParams
     })
-    if (updateState) {
-      // Save active item/data
-      this.setState(
-        {
-          listItems,
-          lastCheckedUid,
-          lastCheckedChildrenUids,
-          lastCheckedParentFacetUid,
-        },
-        () => {
-          if (this.selectedDialectFilter) {
-            const selectedParams = this.clickParams[this.selectedDialectFilter]
-            if (selectedParams) {
-              this.handleClick(selectedParams)
-              this.selectedDialectFilter = undefined
-            }
-          }
-        }
-      )
-    }
   }
 
-  handleClick = (obj) => {
-    const { href, checkedFacetUid, childrenIds, parentFacetUid } = obj
-
+  // NOTE: used to be called handleClick
+  setSelected = ({ href, checkedFacetUid, childrenIds, parentFacetUid }) => {
     const { lastCheckedUid, lastCheckedChildrenUids, lastCheckedParentFacetUid } = this.state
 
     let unselected = undefined
@@ -339,7 +239,7 @@ class DialectFilterListData extends Component {
           checkedFacetUid,
           childrenIds,
         }
-        this.props.handleDialectFilterClick({
+        this.props.setDialectFilter({
           facetField: this.state.facetField,
           selected,
           unselected,
@@ -356,10 +256,9 @@ class DialectFilterListData extends Component {
           ? selectn('routeParams.category', this.props)
           : selectn('routeParams.phraseBook', this.props)
       if (_filterId) {
-        const selectedParams = this.clickParams[_filterId]
+        const selectedParams = this.historyData[_filterId]
         if (selectedParams) {
           const { href, checkedFacetUid, childrenIds, parentFacetUid } = selectedParams
-          // this.handleClick(selectedParams)
           this.setState(
             {
               lastCheckedUid: checkedFacetUid,
@@ -371,15 +270,12 @@ class DialectFilterListData extends Component {
                 checkedFacetUid,
                 childrenIds,
               }
-              this.props.handleDialectFilterClick(
-                {
-                  facetField: this.state.facetField,
-                  selected,
-                  undefined,
-                  href,
-                },
-                false
-              )
+              this.props.setDialectFilter({
+                facetField: this.state.facetField,
+                selected,
+                href,
+                updateUrl: false,
+              })
             }
           )
         }
@@ -422,11 +318,11 @@ const { any, array, func, instanceOf, object, string } = PropTypes
 DialectFilterListData.propTypes = {
   appliedFilterIds: instanceOf(Set),
   children: any,
-  handleDialectFilterClick: func.isRequired,
+  dialectFilterListWillUnmount: func,
   path: string.isRequired, // Used with facets
+  setDialectFilter: func,
   type: string.isRequired,
   workspaceKey: string.isRequired, // Used with facetField
-  handleDialectFilterList: func.isRequired,
   // REDUX: reducers/state
   computeCategories: object.isRequired,
   routeParams: object.isRequired,
@@ -435,7 +331,8 @@ DialectFilterListData.propTypes = {
   fetchCategories: func.isRequired,
 }
 DialectFilterListData.defaultProps = {
-  type: 'words',
+  dialectFilterListWillUnmount: () => {},
+  setDialectFilter: () => {},
 }
 
 // REDUX: reducers/state
