@@ -37,6 +37,7 @@ class DictionaryListData extends Component {
   constructor(props) {
     super(props)
 
+    this.computeDocumentkey = `${props.routeParams.dialect_path}/Dictionary`
     this.state = {
       columns: this.getColumns(),
     }
@@ -45,11 +46,17 @@ class DictionaryListData extends Component {
   componentDidUpdate(prevProps) {
     const { routeParams: curRouteParams } = this.props
     const { routeParams: prevRouteParams } = prevProps
+
+    const { letter: curLetter, category: curCategory } = curRouteParams
+    const { letter: prevLetter, category: prevCategory } = prevRouteParams
+
     if (
       curRouteParams.page !== prevRouteParams.page ||
       curRouteParams.pageSize !== prevRouteParams.pageSize ||
       curRouteParams.category !== prevRouteParams.category ||
-      curRouteParams.area !== prevRouteParams.area
+      curRouteParams.area !== prevRouteParams.area ||
+      curCategory !== prevCategory ||
+      curLetter !== prevLetter
     ) {
       this.fetchListViewData({ pageIndex: curRouteParams.page, pageSize: curRouteParams.pageSize })
     }
@@ -58,11 +65,8 @@ class DictionaryListData extends Component {
   async componentDidMount() {
     const { routeParams, computeDocument, computePortal } = this.props
     // Document
-    await ProviderHelpers.fetchIfMissing(
-      `${routeParams.dialect_path}/Dictionary`,
-      this.props.fetchDocument,
-      computeDocument
-    )
+    await ProviderHelpers.fetchIfMissing(this.computeDocumentkey, this.props.fetchDocument, computeDocument)
+
     // Portal
     await ProviderHelpers.fetchIfMissing(`${routeParams.dialect_path}/Portal`, this.props.fetchPortal, computePortal)
     // Words
@@ -165,8 +169,31 @@ class DictionaryListData extends Component {
 
     const computedDocument = ProviderHelpers.getEntry(computeDocument, `${routeParams.dialect_path}/Dictionary`)
     const uid = useIdOrPathFallback({ id: selectn('response.uid', computedDocument), routeParams })
+
+    // const nql = `${currentAppliedFilter}&currentPageIndex=${
+    //   pageIndex - 1
+    // }&pageSize=${
+    //   pageSize
+    // }&sortOrder=${
+    //   sortOrder
+    // }&sortBy=${
+    //   sortBy
+    // }&enrichment=category_children${
+    //   startsWithQuery
+    // }`
+
+    const dialectId = selectn(
+      'response.contextParameters.ancestry.dialect.uid',
+      ProviderHelpers.getEntry(this.props.computeDocument, this.computeDocumentkey)
+    )
+
     const nql = `${currentAppliedFilter}&currentPageIndex=${pageIndex -
-      1}&pageSize=${pageSize}&sortOrder=${sortOrder}&sortBy=${sortBy}&enrichment=category_children${startsWithQuery}`
+      1}&dialectId=${dialectId}&pageSize=${pageSize}&sortOrder=${sortOrder}&sortBy=${sortBy}&enrichment=category_children${
+      this.props.routeParams.letter
+        ? `&letter=${this.props.routeParams.letter}&starts_with_query=Document.CustomOrderQuery`
+        : startsWithQuery
+    }`
+
     this.props.fetchWords(uid, nql)
   }
   getColumns = () => {
