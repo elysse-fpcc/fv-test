@@ -39,15 +39,16 @@ class PageDialectLearnWords extends Component {
       <WordsData>
         {({
           changeFilter,
+          dialectFilterListWillUnmount, // TODO: why this can't be handled by setDialectFilter?
           filterInfo,
-          // flashcardMode,
-          handleDialectFilterList,
+          handleAlphabetClick,
           intl,
           isKidsTheme,
           onNavigateRequest,
           pushWindowPath,
           resetSearch,
           routeParams,
+          setDialectFilter,
           splitWindowPath,
         }) => {
           return (
@@ -102,6 +103,9 @@ class PageDialectLearnWords extends Component {
                           characters={characters}
                           dialectClassName={dialectClassName}
                           handleClick={(letterClicked, href) => {
+                            // Update redux
+                            handleAlphabetClick({ letterClicked, href, updateHistory: false })
+                            // Navigate to new page
                             NavigationHelpers.navigate(href, pushWindowPath, false)
                           }}
                           letter={letter}
@@ -113,41 +117,13 @@ class PageDialectLearnWords extends Component {
 
                   <DialectFilterListData
                     appliedFilterIds={filterInfo.get('currentCategoryFilterIds')}
+                    dialectFilterListWillUnmount={dialectFilterListWillUnmount}
                     path={`/api/v1/path/FV/${routeParams.area}/SharedData/Shared Categories/@children`}
+                    setDialectFilter={setDialectFilter}
+                    type="words"
                     workspaceKey="fv-word:categories"
-                    handleDialectFilterClick={() => {
-                      /*console.log('handleDialectFilterClick')*/
-                    }}
-                    handleDialectFilterList={handleDialectFilterList}
-                    handleDialectFilterListClick={async ({ facetField, selected, unselected }) => {
-                      // eslint-disable-next-line
-                      console.log('handleDialectFilterListClick', { facetField, selected, unselected })
-                      // await this.props.searchDialectUpdate({
-                      //   searchByAlphabet: '',
-                      //   searchByMode: SEARCH_BY_CATEGORY,
-                      //   searchBySettings: {
-                      //     searchByTitle: true,
-                      //     searchByDefinitions: false,
-                      //     searchByTranslations: false,
-                      //     searchPartOfSpeech: SEARCH_PART_OF_SPEECH_ANY,
-                      //   },
-                      //   searchingDialectFilter: selected.checkedFacetUid,
-                      //   searchTerm: '',
-                      // })
-
-                      // this.changeFilter()
-
-                      // this.handleDialectFilterChange({
-                      //   facetField,
-                      //   selected,
-                      //   type: this.DIALECT_FILTER_TYPE,
-                      //   unselected,
-                      // })
-                    }}
                   >
-                    {({ listItems, listItemsData }) => {
-                      // eslint-disable-next-line
-                      console.log('??', listItems, listItemsData)
+                    {({ listItemsData }) => {
                       return (
                         <DialectFilterList
                           title={intl.trans(
@@ -155,7 +131,6 @@ class PageDialectLearnWords extends Component {
                             'Browse Categories',
                             'words'
                           )}
-                          listItems={listItems}
                           listItemsData={listItemsData}
                         />
                       )
