@@ -20,11 +20,15 @@ import selectn from 'selectn'
 import { connect } from 'react-redux'
 // REDUX: actions/dispatch/func
 import { pushWindowPath } from 'providers/redux/reducers/windowPath'
-import { searchDialectUpdate } from 'providers/redux/reducers/searchDialect'
+import { searchDialectUpdate, searchDialectReset } from 'providers/redux/reducers/searchDialect'
 
 import NavigationHelpers from 'common/NavigationHelpers'
 import ProviderHelpers from 'common/ProviderHelpers'
-import { SEARCH_BY_ALPHABET, SEARCH_BY_CATEGORY } from 'views/components/SearchDialect/constants'
+import {
+  SEARCH_BY_ALPHABET,
+  SEARCH_BY_CATEGORY,
+  SEARCH_PART_OF_SPEECH_ANY,
+} from 'views/components/SearchDialect/constants'
 import PageDialectLearnBase from 'views/pages/explore/dialect/learn/base'
 
 class WordsData extends PageDialectLearnBase {
@@ -69,6 +73,9 @@ class WordsData extends PageDialectLearnBase {
     }
     this.setState(newState)
   }
+  componentWillUnmount() {
+    this.props.searchDialectReset()
+  }
 
   render() {
     const { filterInfo, flashcardMode, isKidsTheme } = this.state
@@ -79,14 +86,19 @@ class WordsData extends PageDialectLearnBase {
       changeFilter: this.changeFilter,
       clearDialectFilter: this.clearDialectFilter,
       resetSearch: this.resetSearch,
-      handleDialectFilterList: this.handleDialectFilterList, // NOTE: This function is in PageDialectLearnBase
+      dialectFilterListWillUnmount: ({ facetField, selected, unselected, type, resetUrlPagination }) => {
+        // NOTE: This function is in PageDialectLearnBase
+        this.handleDialectFilterList(facetField, selected, unselected, type, resetUrlPagination)
+      },
       splitWindowPath: this.props.splitWindowPath,
       pushWindowPath: this.props.pushWindowPath,
       intl: this.props.intl,
       routeParams: this.props.routeParams,
       onNavigateRequest: this._onNavigateRequest,
-      searchDialectUpdate: this.props.searchDialectUpdate,
-      computeSearchDialect: this.props.computeSearchDialect,
+      constSearchByAlphabet: SEARCH_BY_ALPHABET,
+      constSearchPartOfSpeechAny: SEARCH_PART_OF_SPEECH_ANY,
+      handleAlphabetClick: this.handleAlphabetClick,
+      setDialectFilter: this.setDialectFilter,
     })
   }
   // END render
@@ -141,50 +153,16 @@ class WordsData extends PageDialectLearnBase {
         //
         // The above test (`is(...) === false`) prevents updates triggered by back or forward buttons
         // and any other unnecessary updates (ie: the filter didn't change)
-        this._resetURLPagination({ preserveSearch: true }) // NOTE: This function is in PageDialectLearnBase
 
-        // See about updating url
         if (href && updateUrl) {
           NavigationHelpers.navigate(href, this.props.pushWindowPath, false)
+        } else {
+          this._resetURLPagination({ preserveSearch: true }) // NOTE: This function is in PageDialectLearnBase
         }
       })
     }
   }
-  // via wordsFilteredByCategory
-  /*
-  changeFilter = () => {
-    const { filterInfo } = this.state
-    const { computeSearchDialect, routeParams, splitWindowPath } = this.props
-    const { searchByMode, searchNxqlQuery } = computeSearchDialect
 
-    const newFilter = updateFilter({
-      filterInfo,
-      searchByMode,
-      searchNxqlQuery,
-    })
-
-    // When facets change, pagination should be reset.
-    // In these pages (words/phrase), list views are controlled via URL
-    if (is(filterInfo, newFilter) === false) {
-      this.setState({ filterInfo: newFilter }, () => {
-        // NOTE: `updateUrlIfPageOrPageSizeIsDifferent` below can trigger FW-256:
-        // "Back button is not working properly when paginating within alphabet chars
-        // (Navigate to /learn/words/alphabet/a/1/1 - go to page 2, 3, 4. Use back button.
-        // You will be sent to the first page)"
-        //
-        // The above test (`is(...) === false`) prevents updates triggered by back or forward buttons
-        // and any other unnecessary updates (ie: the filter didn't change)
-        updateUrlIfPageOrPageSizeIsDifferent({
-          // pageSize, // TODO ?
-          preserveSearch: true,
-          pushWindowPath: this.props.pushWindowPath,
-          routeParams,
-          splitWindowPath,
-        })
-      })
-    }
-  }
-*/
   clearDialectFilter = () => {
     this.setState({ filterInfo: this.initialFilterInfo() })
   }
@@ -236,10 +214,6 @@ class WordsData extends PageDialectLearnBase {
         filterInfo: newFilter,
       },
       () => {
-        // When facets change, pagination should be reset.
-        // In these pages (words/phrase), list views are controlled via URL
-        this._resetURLPagination() // NOTE: This function is in PageDialectLearnBase
-
         // Remove alphabet/category filter urls
         if (selectn('routeParams.category', this.props) || selectn('routeParams.letter', this.props)) {
           let resetUrl = `/${this.props.splitWindowPath.join('/')}`
@@ -249,11 +223,45 @@ class WordsData extends PageDialectLearnBase {
             _splitWindowPath.splice(learnIndex + 2)
             resetUrl = `/${_splitWindowPath.join('/')}`
           }
-
           NavigationHelpers.navigate(resetUrl, this.props.pushWindowPath, false)
+        } else {
+          // When facets change, pagination should be reset.
+          // In these pages (words/phrase), list views are controlled via URL
+          this._resetURLPagination() // NOTE: This function is in PageDialectLearnBase
         }
       }
     )
+  }
+
+  setDialectFilter = async ({ selected, href, updateUrl }) => {
+    await searchDialectUpdate({
+      searchByAlphabet: '',
+      searchByMode: SEARCH_BY_CATEGORY,
+      searchBySettings: {
+        searchByTitle: true,
+        searchByDefinitions: false,
+        searchByTranslations: false,
+        searchPartOfSpeech: SEARCH_PART_OF_SPEECH_ANY,
+      },
+      searchingDialectFilter: selected.checkedFacetUid,
+      searchTerm: '',
+    })
+    this.changeFilter({ href, updateUrl })
+  }
+
+  handleAlphabetClick = async ({ letterClicked, href, updateHistory }) => {
+    await this.props.searchDialectUpdate({
+      searchByAlphabet: letterClicked,
+      searchByMode: SEARCH_BY_ALPHABET,
+      searchBySettings: {
+        searchByTitle: true,
+        searchByDefinitions: false,
+        searchByTranslations: false,
+        searchPartOfSpeech: SEARCH_PART_OF_SPEECH_ANY,
+      },
+      searchTerm: '',
+    })
+    this.changeFilter({ href, updateUrl: updateHistory })
   }
 }
 
@@ -268,6 +276,7 @@ WordsData.propTypes = {
   // REDUX: actions/dispatch/func
   pushWindowPath: func.isRequired,
   searchDialectUpdate: func.isRequired,
+  searchDialectReset: func.isRequired,
 }
 
 // REDUX: reducers/state
@@ -278,7 +287,6 @@ const mapStateToProps = (state /*, ownProps*/) => {
   const { properties, route } = navigation
   const { splitWindowPath } = windowPath
   const { intlService } = locale
-
   return {
     computeSearchDialect,
     properties,
@@ -292,6 +300,7 @@ const mapStateToProps = (state /*, ownProps*/) => {
 const mapDispatchToProps = {
   pushWindowPath,
   searchDialectUpdate,
+  searchDialectReset,
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(WordsData)
