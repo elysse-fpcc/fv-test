@@ -1,3 +1,23 @@
+/*
+ *
+ *  *
+ *  * Copyright 2020 First People's Cultural Council
+ *  *
+ *  * Licensed under the Apache License, Version 2.0 (the "License");
+ *  * you may not use this file except in compliance with the License.
+ *  * You may obtain a copy of the License at
+ *  *
+ *  *     http://www.apache.org/licenses/LICENSE-2.0
+ *  *
+ *  * Unless required by applicable law or agreed to in writing, software
+ *  * distributed under the License is distributed on an "AS IS" BASIS,
+ *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  * See the License for the specific language governing permissions and
+ *  * limitations under the License.
+ *  * /
+ *
+ */
+
 package ca.firstvoices.maintenance.services;
 
 import ca.firstvoices.maintenance.Constants;
@@ -21,7 +41,8 @@ public class MaintenanceLoggerImpl implements MaintenanceLogger {
     }
 
     // Get current required jobs
-    String[] requiredJobsRawList = (String[]) jobContainer.getPropertyValue("fv-maintenance:required_jobs");
+    String[] requiredJobsRawList = (String[]) jobContainer
+        .getPropertyValue("fv-maintenance:required_jobs");
     if (requiredJobsRawList != null) {
       return new HashSet<>(Arrays.asList(requiredJobsRawList));
     }
@@ -41,9 +62,7 @@ public class MaintenanceLoggerImpl implements MaintenanceLogger {
       CoreSession session = jobContainer.getCoreSession();
       session.saveDocument(jobContainer);
 
-      sendEvent(
-          "Job Queued",
-          job + " queued for `" + jobContainer.getTitle() + "`",
+      sendEvent("Job Queued", job + " queued for `" + jobContainer.getTitle() + "`",
           Constants.EXECUTE_REQUIRED_JOBS_QUEUED, session, jobContainer);
     }
   }
@@ -61,9 +80,7 @@ public class MaintenanceLoggerImpl implements MaintenanceLogger {
         CoreSession session = jobContainer.getCoreSession();
         session.saveDocument(jobContainer);
 
-        sendEvent(
-            "Job Complete",
-            job + " completed for `" + jobContainer.getTitle() + "`",
+        sendEvent("Job Complete", job + " completed for `" + jobContainer.getTitle() + "`",
             Constants.EXECUTE_REQUIRED_JOBS_COMPLETE, session, jobContainer);
       }
     }
@@ -91,13 +108,15 @@ public class MaintenanceLoggerImpl implements MaintenanceLogger {
 
   // This is sent for audit purposes at the moment
   // In the future Listeners could catch these events to send emails, and turn on features
-  private void sendEvent(String status, String message, String eventId, CoreSession session, DocumentModel jobContainer) {
-    EventProducer eventProducer = Framework.getService(EventProducer.class);
-    DocumentEventContext ctx = new DocumentEventContext(session, session.getPrincipal(), jobContainer);
+  private void sendEvent(String status, String message, String eventId, CoreSession session,
+      DocumentModel jobContainer) {
+    DocumentEventContext ctx = new DocumentEventContext(session, session.getPrincipal(),
+        jobContainer);
     ctx.setProperty("status", status);
     ctx.setComment(message);
     ctx.setCategory(Constants.REQUIRED_JOBS_FRIENDLY_NAME);
     Event event = ctx.newEvent(eventId);
+    EventProducer eventProducer = Framework.getService(EventProducer.class);
     eventProducer.fireEvent(event);
   }
 }

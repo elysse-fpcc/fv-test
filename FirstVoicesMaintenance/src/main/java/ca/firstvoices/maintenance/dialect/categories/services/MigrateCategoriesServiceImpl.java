@@ -1,3 +1,23 @@
+/*
+ *
+ *  *
+ *  * Copyright 2020 First People's Cultural Council
+ *  *
+ *  * Licensed under the Apache License, Version 2.0 (the "License");
+ *  * you may not use this file except in compliance with the License.
+ *  * You may obtain a copy of the License at
+ *  *
+ *  *     http://www.apache.org/licenses/LICENSE-2.0
+ *  *
+ *  * Unless required by applicable law or agreed to in writing, software
+ *  * distributed under the License is distributed on an "AS IS" BASIS,
+ *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  * See the License for the specific language governing permissions and
+ *  * limitations under the License.
+ *  * /
+ *
+ */
+
 package ca.firstvoices.maintenance.dialect.categories.services;
 
 import ca.firstvoices.publisher.services.FirstVoicesPublisherService;
@@ -28,8 +48,9 @@ public class MigrateCategoriesServiceImpl implements MigrateCategoriesService {
   DocumentModel localCategoriesDirectory = null;
 
   /**
-   * This method will migrate a category tree from Shared Categories to Local Categories.
-   * It does not update references. It will also publish the categories if the dialect is published.
+   * This method will migrate a category tree from Shared Categories to Local Categories. It does
+   * not update references. It will also publish the categories if the dialect is published.
+   *
    * @param session
    * @param dialect
    * @return true if categories were copied, false otherwise
@@ -37,7 +58,8 @@ public class MigrateCategoriesServiceImpl implements MigrateCategoriesService {
   @Override
   public boolean migrateCategoriesTree(CoreSession session, DocumentModel dialect) {
 
-    FirstVoicesPublisherService publisherService = Framework.getService(FirstVoicesPublisherService.class);
+    FirstVoicesPublisherService publisherService = Framework
+        .getService(FirstVoicesPublisherService.class);
 
     int copiedCategories = 0;
 
@@ -79,35 +101,39 @@ public class MigrateCategoriesServiceImpl implements MigrateCategoriesService {
       return 0;
     }
 
-    FirstVoicesPublisherService publisherService = Framework.getService(FirstVoicesPublisherService.class);
-    UnpublishedChangesService unpublishedChangesService = Framework.getService(UnpublishedChangesService.class);
+    FirstVoicesPublisherService publisherService = Framework
+        .getService(FirstVoicesPublisherService.class);
+    UnpublishedChangesService unpublishedChangesService = Framework
+        .getService(UnpublishedChangesService.class);
 
     // Get the local categories that already exist
     localCategories = getCategories(session, dialect.getId());
 
-    DocumentModelList sharedCategories = getCategories(session, getSharedCategoriesContainer(session).getId());
+    DocumentModelList sharedCategories = getCategories(session,
+        getSharedCategoriesContainer(session).getId());
 
     if (sharedCategories.size() > 0) {
-      String ids = "'" + sharedCategories.stream().map(DocumentModel::getId).collect(Collectors.joining("','")) + "'";
+      String ids = "'" + sharedCategories.stream().map(DocumentModel::getId)
+          .collect(Collectors.joining("','")) + "'";
 
       // Get all words that reference shared categories
-      String query =  "SELECT * FROM FVWord"
-          + " WHERE fva:dialect = '" + dialect.getId() + "' "
-          + " AND fv-word:categories/* IN ( " + ids + ")"
-          + " AND ecm:isTrashed = 0"
-          + " AND ecm:isProxy = 0"
-          + " AND ecm:isVersion = 0";
+      String query = "SELECT * FROM FVWord" + " WHERE fva:dialect = '" + dialect.getId() + "' "
+          + " AND fv-word:categories/* IN ( " + ids + ")" + " AND ecm:isTrashed = 0"
+          + " AND ecm:isProxy = 0" + " AND ecm:isVersion = 0";
       DocumentModelList words = session.query(query, batchSize);
 
       for (DocumentModel word : words) {
 
         // Get unpublished changes
         // Remember to do this here, BEFORE we modify the document
-        boolean unpublishedChangesExist = unpublishedChangesService.checkUnpublishedChanges(session, word);
+        boolean unpublishedChangesExist = unpublishedChangesService
+            .checkUnpublishedChanges(session, word);
 
         // Update category Ids
-        List<String> categoryIds = Arrays.asList((String[]) word.getPropertyValue("fv-word:categories"));
-        categoryIds = categoryIds.stream().map(id -> getLocalCategory(session, id)).collect(Collectors.toList());
+        List<String> categoryIds = Arrays
+            .asList((String[]) word.getPropertyValue("fv-word:categories"));
+        categoryIds = categoryIds.stream().map(id -> getLocalCategory(session, id))
+            .collect(Collectors.toList());
         word.setProperty("fv-word", "categories", categoryIds);
 
         // Save document
@@ -130,8 +156,7 @@ public class MigrateCategoriesServiceImpl implements MigrateCategoriesService {
 
   private DocumentModel getExistingCategory(DocumentModel category) {
     return localCategories.stream()
-        .filter(localCategory -> localCategory.getTitle().equals(category.getTitle()))
-        .findFirst()
+        .filter(localCategory -> localCategory.getTitle().equals(category.getTitle())).findFirst()
         .orElse(null);
   }
 
@@ -160,8 +185,8 @@ public class MigrateCategoriesServiceImpl implements MigrateCategoriesService {
     }
 
     // Create new category
-    DocumentModel newLocalCategory = session.createDocumentModel(
-        localCategoryDirPath, category.getName(), "FVCategory");
+    DocumentModel newLocalCategory = session
+        .createDocumentModel(localCategoryDirPath, category.getName(), "FVCategory");
     newLocalCategory.setPropertyValue("dc:title", category.getTitle());
     DocumentModel newCategory = session.createDocument(newLocalCategory);
 
@@ -175,12 +200,10 @@ public class MigrateCategoriesServiceImpl implements MigrateCategoriesService {
 
     ArrayList<String> categoryIds = new ArrayList<>();
 
-    String query = "SELECT fv-word:categories/* FROM FVWord "
-        + "WHERE fv-word:categories/* IS NOT NULL "
-        + "AND fva:dialect = '" + dialectId + "' "
-        + "AND ecm:isTrashed = 0"
-        + "AND ecm:isVersion = 0";
-
+    String query =
+        "SELECT fv-word:categories/* FROM FVWord " + "WHERE fv-word:categories/* IS NOT NULL "
+            + "AND fva:dialect = '" + dialectId + "' " + "AND ecm:isTrashed = 0"
+            + "AND ecm:isVersion = 0";
 
     IterableQueryResult results = session.queryAndFetch(query, "NXQL", true, null);
     Iterator<Map<String, Serializable>> it = results.iterator();
@@ -198,17 +221,17 @@ public class MigrateCategoriesServiceImpl implements MigrateCategoriesService {
 
   private String getLocalCategory(CoreSession session, String sharedCategoryId) {
     DocumentModel sharedCategory = session.getDocument(new IdRef(sharedCategoryId));
-    return localCategories.stream().filter(localCategory -> localCategory.getTitle().equals(sharedCategory.getTitle())).findFirst().orElse(sharedCategory).getId();
+    return localCategories.stream()
+        .filter(localCategory -> localCategory.getTitle().equals(sharedCategory.getTitle()))
+        .findFirst().orElse(sharedCategory).getId();
   }
 
   private DocumentModelList getCategories(CoreSession session, String containerId) {
 
     DocumentModelList categories = null;
 
-    String query = "SELECT * FROM FVCategory "
-        + "WHERE ecm:ancestorId = '" + containerId + "' "
-        + "AND ecm:isTrashed = 0"
-        + "AND ecm:isVersion = 0";
+    String query = "SELECT * FROM FVCategory " + "WHERE ecm:ancestorId = '" + containerId + "' "
+        + "AND ecm:isTrashed = 0" + "AND ecm:isVersion = 0";
 
     try {
       categories = session.query(query);

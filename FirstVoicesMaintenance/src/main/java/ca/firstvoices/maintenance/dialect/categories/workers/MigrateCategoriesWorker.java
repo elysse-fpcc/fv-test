@@ -1,3 +1,23 @@
+/*
+ *
+ *  *
+ *  * Copyright 2020 First People's Cultural Council
+ *  *
+ *  * Licensed under the Apache License, Version 2.0 (the "License");
+ *  * you may not use this file except in compliance with the License.
+ *  * You may obtain a copy of the License at
+ *  *
+ *  *     http://www.apache.org/licenses/LICENSE-2.0
+ *  *
+ *  * Unless required by applicable law or agreed to in writing, software
+ *  * distributed under the License is distributed on an "AS IS" BASIS,
+ *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  * See the License for the specific language governing permissions and
+ *  * limitations under the License.
+ *  * /
+ *
+ */
+
 package ca.firstvoices.maintenance.dialect.categories.workers;
 
 import ca.firstvoices.maintenance.dialect.categories.Constants;
@@ -16,7 +36,8 @@ public class MigrateCategoriesWorker extends AbstractWork {
   private final DocumentRef jobContainerRef;
   private final int batchSize;
 
-  private final MigrateCategoriesService service = Framework.getService(MigrateCategoriesService.class);
+  private final MigrateCategoriesService service = Framework
+      .getService(MigrateCategoriesService.class);
 
   private final MaintenanceLogger maintenanceLogger = Framework.getService(MaintenanceLogger.class);
 
@@ -41,24 +62,23 @@ public class MigrateCategoriesWorker extends AbstractWork {
       return;
     }
 
-    CoreInstance
-        .doPrivileged(rpm.getDefaultRepositoryName(),
-            session -> {
-              int wordsFound = batchSize;
-              DocumentModel jobContainer = session.getDocument(jobContainerRef);
-              setStatus("Starting migrate category for words in `" + jobContainer.getTitle() + "`");
+    CoreInstance.doPrivileged(rpm.getDefaultRepositoryName(), session -> {
+      int wordsFound = batchSize;
+      DocumentModel jobContainer = session.getDocument(jobContainerRef);
+      setStatus("Starting migrate category for words in `" + jobContainer.getTitle() + "`");
 
-              while (wordsFound != 0) {
-                wordsFound = service.migrateWords(session, jobContainer, batchSize);
-                setStatus("Migrating next batch on `" + jobContainer.getTitle() + "` ( " + wordsFound + ") words.");
+      while (wordsFound != 0) {
+        wordsFound = service.migrateWords(session, jobContainer, batchSize);
+        setStatus("Migrating next batch on `" + jobContainer.getTitle() + "` ( " + wordsFound
+            + ") words.");
 
-                //Add real progress here when we can modify query for total words
-                //setProgress(new Progress((wordsFound/totalWords)*100));
-              }
+        //Add real progress here when we can modify query for total words
+        //setProgress(new Progress((wordsFound/totalWords)*100));
+      }
 
-              maintenanceLogger.removeFromRequiredJobs(jobContainer, job);
-              setStatus("No more words to migrate in `" + jobContainer.getTitle() + "`");
-            });
+      maintenanceLogger.removeFromRequiredJobs(jobContainer, job);
+      setStatus("No more words to migrate in `" + jobContainer.getTitle() + "`");
+    });
   }
 
   @Override
