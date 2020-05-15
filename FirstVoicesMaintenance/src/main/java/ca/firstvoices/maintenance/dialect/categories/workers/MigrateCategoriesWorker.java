@@ -1,31 +1,11 @@
-/*
- *
- *  *
- *  * Copyright 2020 First People's Cultural Council
- *  *
- *  * Licensed under the Apache License, Version 2.0 (the "License");
- *  * you may not use this file except in compliance with the License.
- *  * You may obtain a copy of the License at
- *  *
- *  *     http://www.apache.org/licenses/LICENSE-2.0
- *  *
- *  * Unless required by applicable law or agreed to in writing, software
- *  * distributed under the License is distributed on an "AS IS" BASIS,
- *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  * See the License for the specific language governing permissions and
- *  * limitations under the License.
- *  * /
- *
- */
-
 package ca.firstvoices.maintenance.dialect.categories.workers;
 
 import ca.firstvoices.maintenance.dialect.categories.Constants;
 import ca.firstvoices.maintenance.dialect.categories.services.MigrateCategoriesService;
 import ca.firstvoices.maintenance.services.MaintenanceLogger;
-import org.nuxeo.ecm.core.api.CoreInstance;
 import org.nuxeo.ecm.core.api.DocumentModel;
 import org.nuxeo.ecm.core.api.DocumentRef;
+import org.nuxeo.ecm.core.api.NuxeoException;
 import org.nuxeo.ecm.core.api.repository.RepositoryManager;
 import org.nuxeo.ecm.core.work.AbstractWork;
 import org.nuxeo.runtime.api.Framework;
@@ -36,8 +16,7 @@ public class MigrateCategoriesWorker extends AbstractWork {
   private final DocumentRef jobContainerRef;
   private final int batchSize;
 
-  private final MigrateCategoriesService service = Framework
-      .getService(MigrateCategoriesService.class);
+  private final MigrateCategoriesService service = Framework.getService(MigrateCategoriesService.class);
 
   private final MaintenanceLogger maintenanceLogger = Framework.getService(MaintenanceLogger.class);
 
@@ -62,23 +41,34 @@ public class MigrateCategoriesWorker extends AbstractWork {
       return;
     }
 
-    CoreInstance.doPrivileged(rpm.getDefaultRepositoryName(), session -> {
-      int wordsFound = batchSize;
-      DocumentModel jobContainer = session.getDocument(jobContainerRef);
-      setStatus("Starting migrate category for words in `" + jobContainer.getTitle() + "`");
+    openSystemSession();
 
-      while (wordsFound != 0) {
-        wordsFound = service.migrateWords(session, jobContainer, batchSize);
-        setStatus("Migrating next batch on `" + jobContainer.getTitle() + "` ( " + wordsFound
-            + ") words.");
+    DocumentModel jobContainer = session.getDocument(jobContainerRef);
+    setStatus("Starting migrate category for words in `" + jobContainer.getTitle() + "`");
 
-        //Add real progress here when we can modify query for total words
-        //setProgress(new Progress((wordsFound/totalWords)*100));
+    // Run first iteration
+    int wordsRemaining = service.migrateWords(session, jobContainer, batchSize);
+
+    while (wordsRemaining != 0) {
+      setStatus("Migrating next batch on `" + jobContainer.getTitle() + "` ( " + wordsRemaining + " words remaining).");
+      int nextWordsRemaining = service.migrateWords(session, jobContainer, batchSize);
+
+      // No progress, worker is stuck
+      if (nextWordsRemaining == wordsRemaining) {
+        setStatus("Failed");
+        maintenanceLogger.removeFromRequiredJobs(jobContainer, job, false);
+        workFailed(new NuxeoException("worker is stuck with progress on " + jobContainer.getTitle()));
       }
 
-      maintenanceLogger.removeFromRequiredJobs(jobContainer, job);
-      setStatus("No more words to migrate in `" + jobContainer.getTitle() + "`");
-    });
+      wordsRemaining = nextWordsRemaining;
+
+      //Add real progress here when we can modify query for total words
+      //setProgress(new Progress((wordsFound/totalWords)*100));
+    }
+
+    maintenanceLogger.removeFromRequiredJobs(jobContainer, job, true);
+    setStatus("No more words to migrate in `" + jobContainer.getTitle() + "`");
+
   }
 
   @Override
