@@ -143,27 +143,28 @@ public class FirstVoicesPublisherServiceImpl extends AbstractService implements
   public void unpublishDialect(DocumentModel dialect) {
     // Arguments checks : need to be a FVDialect in a normal tree
     // (LanguageFamily/Language/Dialect)
+    CoreSession session = dialect.getCoreSession();
     Map<String, DocumentModel> ancestors = getAncestors(dialect);
     DocumentModel languageFamily = ancestors.get("LanguageFamily");
-    DocumentModel languageFamilySection;
-    CoreSession session = dialect.getCoreSession();
-    DocumentModel section = getRootSection(dialect);
-    section = session.getChild(section.getRef(), languageFamily.getName());
+    DocumentModel language = ancestors.get("Language");
+    DocumentModel section = session
+        .getChild(getRootSection(dialect).getRef(), languageFamily.getName());
     if (section == null) {
       throw new InvalidParameterException("Dialect is not published");
     }
+    DocumentModel languageFamilySection;
     languageFamilySection = section;
-    DocumentModel language = ancestors.get("Language");
     section = session.getChild(section.getRef(), language.getName());
     if (section == null) {
       throw new InvalidParameterException("Dialect is not published");
     }
+    DocumentModel languageSection;
+    languageSection = section;
     section = session.getChild(section.getRef(), dialect.getName());
     if (section == null) {
       throw new InvalidParameterException("Dialect is not published");
     }
     session.removeDocument(section.getRef());
-    DocumentModel languageSection = section;
     if (session.getChildren(languageSection.getRef()).isEmpty()) {
       session.removeDocument(languageSection.getRef());
     }
@@ -222,6 +223,7 @@ public class FirstVoicesPublisherServiceImpl extends AbstractService implements
       if (dependency.equals("fvmedia:origin")) {
         dependencyPropertyValue = PublisherUtils
             .extractDependencyPropertyValueAsString(input, dependency);
+
       } else {
         // Handle as array
 
@@ -264,6 +266,7 @@ public class FirstVoicesPublisherServiceImpl extends AbstractService implements
         // Handle exception property values as string
         if (dependencyEntry.getKey().equals("fvmedia:origin")) {
           input.setPropertyValue(dependencyEntry.getValue(), publishedDep.getRef().toString());
+
         } else {
           // Handle as array
 
@@ -613,8 +616,7 @@ public class FirstVoicesPublisherServiceImpl extends AbstractService implements
       if (dependencyEntry.getKey().equals("fv-portal:featured_words") || dependencyEntry.getKey()
           .equals("fv-portal:related_links")) {
         dependencyPropertyValue = (String[]) input.getPropertyValue(dependency);
-      } else {
-        // Handle as string
+      } else {      // Handle as string
 
         dependencyPropertyValue = PublisherUtils
             .extractDependencyPropertyValueAsString(input, dependency);
