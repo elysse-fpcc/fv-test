@@ -45,7 +45,7 @@ public class MigrateCategories {
   protected CoreSession session;
   @Context
   protected WorkManager workManager;
-  @Param(name = "phase", required = true, values = {"init", "work"})
+  @Param(name = "phase", values = {"init", "work"})
   protected String phase = "init";
   @Param(name = "batchSize")
   protected int batchSize = 1000;
@@ -80,7 +80,8 @@ public class MigrateCategories {
 
       } else {
         throw new OperationException(
-            "Migrate categories tree not completed and job not queued. Tree is possibly already migrated.");
+            "Migrate categories tree not completed and job not queued. Tree is possibly already "
+                + "migrated.");
       }
 
     } else if (phase.equals("work")) {

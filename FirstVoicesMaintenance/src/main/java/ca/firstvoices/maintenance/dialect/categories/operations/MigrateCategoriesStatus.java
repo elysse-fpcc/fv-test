@@ -24,9 +24,9 @@ import org.nuxeo.ecm.core.work.api.WorkManager;
 import org.nuxeo.ecm.webengine.model.exceptions.WebSecurityException;
 import org.nuxeo.runtime.api.Framework;
 
-@Operation(id = MigrateCategoriesStatus.ID, category = Constants.GROUP_NAME,
-    label = Constants.MIGRATE_CATEGORIES_STATUS_ACTION_ID,
-    description = "Operation to show the status of the migration for categories")
+@Operation(id = MigrateCategoriesStatus.ID, category = Constants.GROUP_NAME, label =
+    Constants.MIGRATE_CATEGORIES_STATUS_ACTION_ID, description =
+    "Operation to show the status of" + " the migration for categories")
 public class MigrateCategoriesStatus {
 
   public static final String ID = Constants.MIGRATE_CATEGORIES_STATUS_ACTION_ID;
@@ -34,8 +34,8 @@ public class MigrateCategoriesStatus {
   protected CoreSession session;
   @Context
   protected WorkManager workManager;
-  MigrateCategoriesService migrateCategoriesService = Framework.getService(
-      MigrateCategoriesService.class);
+  MigrateCategoriesService migrateCategoriesService = Framework
+      .getService(MigrateCategoriesService.class);
   MaintenanceLogger maintenanceLogger = Framework.getService(MaintenanceLogger.class);
 
   @OperationMethod
@@ -51,8 +51,9 @@ public class MigrateCategoriesStatus {
     int sharedCategoriesCount = 0;
     int localCategoriesCount = 0;
 
-    IterableQueryResult results = session.queryAndFetch(
-        migrateCategoriesService.getUniqueCategoriesQuery(dialect.getId()), "NXQL", true, null);
+    IterableQueryResult results = session
+        .queryAndFetch(migrateCategoriesService.getUniqueCategoriesQuery(dialect.getId()), "NXQL",
+            true, null);
     Iterator<Map<String, Serializable>> it = results.iterator();
 
     while (it.hasNext()) {
