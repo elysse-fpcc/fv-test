@@ -1,23 +1,3 @@
-/*
- *
- *  *
- *  * Copyright 2020 First People's Cultural Council
- *  *
- *  * Licensed under the Apache License, Version 2.0 (the "License");
- *  * you may not use this file except in compliance with the License.
- *  * You may obtain a copy of the License at
- *  *
- *  *     http://www.apache.org/licenses/LICENSE-2.0
- *  *
- *  * Unless required by applicable law or agreed to in writing, software
- *  * distributed under the License is distributed on an "AS IS" BASIS,
- *  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *  * See the License for the specific language governing permissions and
- *  * limitations under the License.
- *  * /
- *
- */
-
 package ca.firstvoices.nuxeo.operations;
 
 import java.io.Serializable;
@@ -25,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.nuxeo.ecm.automation.AutomationService;
@@ -40,99 +21,101 @@ import org.nuxeo.ecm.core.api.DocumentModelList;
 import org.nuxeo.ecm.core.api.IterableQueryResult;
 import org.nuxeo.ecm.core.api.UnrestrictedSessionRunner;
 
-@Operation(id = ListDialects.ID, category = Constants.CAT_DOCUMENT, label = "List dialects in FV"
-    + " tree", description = "Returns a list of dialects based on selection criteria")
+@Operation(id = ListDialects.ID, category = Constants.CAT_DOCUMENT, label = "List dialects in FV tree", description = "Returns a list of dialects based on selection criteria")
 public class ListDialects {
+    public static final String ID = "Document.ListDialects";
 
-  public static final String ID = "Document.ListDialects";
-  public static final String ALL_DIALECTS = "*";
-  public static final String DIALECTS_TO_JOIN = "to-join";
-  public static final String NEW_DIALECTS = "new";
-  public static final String ENABLED_DIALECTS = "enabled";
-  public static final String DISABLED_DIALECTS = "disabled";
-  public static final String PUBLISHED_DIALECTS = "published";
-  private static Log log = LogFactory.getLog(ListDialects.class);
-  @Context
-  protected AutomationService automationService;
+    private static Log log = LogFactory.getLog(ListDialects.class);
 
-  @Context
-  protected CoreSession session;
+    public static final String ALL_DIALECTS = "*";
 
-  @Param(name = "dialectState", required = false, values = {DIALECTS_TO_JOIN, ALL_DIALECTS,
-      NEW_DIALECTS, ENABLED_DIALECTS, DISABLED_DIALECTS, PUBLISHED_DIALECTS})
-  protected String dialectState = DIALECTS_TO_JOIN;
+    public static final String DIALECTS_TO_JOIN = "to-join";
 
-  @OperationMethod
-  public Blob run() throws Exception {
-    DocumentModelList documentModelList;
+    public static final String NEW_DIALECTS = "new";
 
-    String queryFront = "SELECT ecm:uuid, dc:title FROM FVDialect WHERE ";
-    String queryVersion = "ecm:isVersion=0 ";
-    String queryProxy = "ecm:isProxy=0 AND ";
-    String querySort = "ORDER BY dc:title ASC";
-    String query = queryFront + queryVersion + querySort;
+    public static final String ENABLED_DIALECTS = "enabled";
 
-    switch (dialectState.toLowerCase()) {
-      case ALL_DIALECTS:
-        query = "SELECT ecm:uuid, dc:title, ecm:currentLifeCycleState FROM FVDialect " + querySort;
-        break;
-      case NEW_DIALECTS:
-        query = queryFront + "ecm:currentLifeCycleState = 'New' " + querySort;
-        break;
-      case DIALECTS_TO_JOIN:
-        query =
-            queryFront + "(ecm:currentLifeCycleState = 'Enabled' OR  (ecm:currentLifeCycleState = "
-                + "'Published' AND ecm:isProxy=0)) AND " + queryVersion + querySort;
-        break;
-      case ENABLED_DIALECTS:
-        query =
-            queryFront + "ecm:currentLifeCycleState = 'Enabled' AND " + queryVersion + querySort;
-        break;
-      case DISABLED_DIALECTS:
-        query =
-            queryFront + "ecm:currentLifeCycleState = 'Disabled' AND " + queryVersion + querySort;
-        break;
-      case PUBLISHED_DIALECTS:
-        query =
-            queryFront + "ecm:currentLifeCycleState = 'Published' AND " + queryProxy + queryVersion
-                + querySort;
-        break;
-      default:
-        break;
-    }
+    public static final String DISABLED_DIALECTS = "disabled";
 
-    UnrestrictedDialectQuery dialectListQueryRunner = new UnrestrictedDialectQuery(session, query);
-    dialectListQueryRunner.runUnrestricted();
+    public static final String PUBLISHED_DIALECTS = "published";
 
-    return Blobs.createJSONBlobFromValue(dialectListQueryRunner.results);
-  }
+    @Context
+    protected AutomationService automationService;
 
-  protected static class UnrestrictedDialectQuery extends UnrestrictedSessionRunner {
+    @Context
+    protected CoreSession session;
 
-    protected List<Map<String, Serializable>> results;
-    private String query;
-    private IterableQueryResult result;
+    @Param(name = "dialectState", required = false, values = { DIALECTS_TO_JOIN, ALL_DIALECTS, NEW_DIALECTS,
+            ENABLED_DIALECTS, DISABLED_DIALECTS, PUBLISHED_DIALECTS })
+    protected String dialectState = DIALECTS_TO_JOIN;
 
-    protected UnrestrictedDialectQuery(CoreSession session, String query) {
-      super(session);
-      this.query = query;
-    }
+    @OperationMethod
+    public Blob run() throws Exception {
+        DocumentModelList dList = null;
 
-    @Override
-    public void run() {
-      try {
-        results = new ArrayList<>();
-        result = session.queryAndFetch(query, "NXQL");
-        Iterator<Map<String, Serializable>> it = result.iterator();
+        String queryFront = "SELECT ecm:uuid, dc:title FROM FVDialect WHERE ";
+        String queryVersion = "ecm:isVersion=0 ";
+        String queryProxy = "ecm:isProxy=0 AND ";
+        String querySort = "ORDER BY dc:title ASC";
+        String query = queryFront + queryVersion + querySort;
 
-        while (it.hasNext()) {
-          Map<String, Serializable> item = it.next();
-          results.add(item);
+        switch (dialectState.toLowerCase()) {
+        case ALL_DIALECTS:
+            query = "SELECT ecm:uuid, dc:title, ecm:currentLifeCycleState FROM FVDialect " + querySort;
+            break;
+        case NEW_DIALECTS:
+            query = queryFront + "ecm:currentLifeCycleState = 'New' " + querySort;
+            break;
+        case DIALECTS_TO_JOIN:
+            query = queryFront
+                    + "(ecm:currentLifeCycleState = 'Enabled' OR  (ecm:currentLifeCycleState = 'Published' AND ecm:isProxy=0)) AND "
+                    + queryVersion + querySort;
+            break;
+        case ENABLED_DIALECTS:
+            query = queryFront + "ecm:currentLifeCycleState = 'Enabled' AND " + queryVersion + querySort;
+            break;
+        case DISABLED_DIALECTS:
+            query = queryFront + "ecm:currentLifeCycleState = 'Disabled' AND " + queryVersion + querySort;
+            break;
+        case PUBLISHED_DIALECTS:
+            query = queryFront + "ecm:currentLifeCycleState = 'Published' AND " + queryProxy + queryVersion + querySort;
+            break;
         }
-      } finally {
-        result.close();
-      }
 
+        UnrestrictedDialectQuery dialectListQueryRunner = new UnrestrictedDialectQuery(session, query);
+        dialectListQueryRunner.runUnrestricted();
+
+        return Blobs.createJSONBlobFromValue(dialectListQueryRunner.results);
     }
-  }
+
+    protected static class UnrestrictedDialectQuery extends UnrestrictedSessionRunner {
+
+        private String query;
+
+        private IterableQueryResult result;
+
+        protected List<Map<String, Serializable>> results;
+
+        protected UnrestrictedDialectQuery(CoreSession session, String query) {
+            super(session);
+            this.query = query;
+        }
+
+        @Override
+        public void run() {
+            try {
+                results = new ArrayList<>();
+                result = session.queryAndFetch(query, "NXQL");
+                Iterator<Map<String, Serializable>> it = result.iterator();
+
+                while (it.hasNext()) {
+                    Map<String, Serializable> item = it.next();
+                    results.add(item);
+                }
+            } finally {
+                result.close();
+            }
+
+        }
+    }
 }
