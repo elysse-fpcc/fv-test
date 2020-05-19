@@ -41,6 +41,7 @@ import WordListView from 'views/pages/explore/dialect/learn/words/list-view'
 
 import DialectFilterListData from 'views/components/DialectFilterList/DialectFilterListData'
 import DialectFilterListPresentation from 'views/components/DialectFilterList/DialectFilterListPresentation'
+import CategoriesDataLayer from 'views/pages/explore/dialect/learn/words/categoriesDataLayer'
 
 import AlphabetListView from 'views/components/AlphabetListView'
 import FVLabel from 'views/components/FVLabel/index'
@@ -54,7 +55,6 @@ import {
   SEARCH_BY_CATEGORY,
 } from 'views/components/SearchDialect/constants'
 
-import CategoriesDataLayer from 'views/pages/explore/dialect/learn/words/categoriesDataLayer'
 const { array, bool, func, object, string } = PropTypes
 /**
  * Learn words
@@ -64,7 +64,7 @@ class PageDialectLearnWords extends PageDialectLearnBase {
     const { routeParams } = this.props
 
     // Portal
-    ProviderHelpers.fetchIfMissing(
+    await ProviderHelpers.fetchIfMissing(
       routeParams.dialect_path + '/Portal',
       this.props.fetchPortal,
       this.props.computePortal
@@ -93,6 +93,10 @@ class PageDialectLearnWords extends PageDialectLearnBase {
 
     const newState = {
       characters,
+      dialectId: selectn(
+        'response.contextParameters.ancestry.dialect.uid',
+        ProviderHelpers.getEntry(this.props.computeDocument, this.props.routeParams.dialect_path + '/Dictionary')
+      ),
     }
 
     // Clear out filterInfo if not in url, eg: /learn/words/categories/[category]
@@ -111,8 +115,6 @@ class PageDialectLearnWords extends PageDialectLearnBase {
   componentWillUnmount() {
     this.props.searchDialectUpdate(initialState)
   }
-
-  DIALECT_FILTER_TYPE = 'words'
 
   constructor(props, context) {
     super(props, context)
@@ -180,12 +182,8 @@ class PageDialectLearnWords extends PageDialectLearnBase {
     const { DEFAULT_SORT_COL, DEFAULT_SORT_TYPE } = searchNxqlSort
     const { DEFAULT_PAGE, DEFAULT_PAGE_SIZE } = this._getURLPageProps() // NOTE: This function is in PageDialectLearnBase
 
-    const dialectId = selectn(
-      'response.contextParameters.ancestry.dialect.uid',
-      ProviderHelpers.getEntry(this.props.computeDocument, this.props.routeParams.dialect_path + '/Dictionary')
-    )
     const wordListView =
-      selectn('response.uid', computeDocument) && dialectId ? (
+      selectn('response.uid', computeDocument) && this.state.dialectId ? (
         <WordListView
           controlViaURL
           DEFAULT_PAGE={DEFAULT_PAGE}
@@ -197,7 +195,7 @@ class PageDialectLearnWords extends PageDialectLearnBase {
           flashcard={this.state.flashcardMode}
           flashcardTitle={pageTitle}
           parentID={selectn('response.uid', computeDocument)}
-          dialectID={dialectId}
+          dialectID={this.state.dialectId}
           routeParams={this.props.routeParams}
           // Search:
           handleSearch={this.handleSearch}
@@ -249,6 +247,7 @@ class PageDialectLearnWords extends PageDialectLearnBase {
     }
 
     const dialectClassName = getDialectClassname(computePortal)
+
     return (
       <PromiseWrapper renderOnError computeEntities={computeEntities}>
         <div className={classNames('row', 'row-create-wrapper')}>
@@ -302,14 +301,10 @@ class PageDialectLearnWords extends PageDialectLearnBase {
                     <DialectFilterListData
                       appliedFilterIds={filterInfo.get('currentCategoryFilterIds')}
                       setDialectFilterCallback={this.setDialectFilterCallback}
-                      transformData={categoriesData}
+                      facets={categoriesData}
+                      facetType="category"
                       type="words"
-                      // --------
-                      // facetField={ProviderHelpers.switchWorkspaceSectionKeys(
-                      //   'fv-word:categories',
-                      //   this.props.routeParams.area
-                      // )}
-                      // handleDialectFilterList={this.handleDialectFilterList} // NOTE: This function is in PageDialectLearnBase
+                      workspaceKey="fv-word:categories"
                     >
                       {({ listItemData }) => {
                         return (
@@ -461,7 +456,6 @@ class PageDialectLearnWords extends PageDialectLearnBase {
     this.setState(
       {
         filterInfo: newFilter,
-        // searchNxqlSort: 'fv:custom_order', // TODO: IS THIS BREAKING SOMETHING?
       },
       () => {
         // When facets change, pagination should be reset.

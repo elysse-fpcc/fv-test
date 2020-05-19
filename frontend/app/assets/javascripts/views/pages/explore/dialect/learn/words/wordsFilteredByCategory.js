@@ -38,6 +38,7 @@ import AuthorizationFilter from 'views/components/Document/AuthorizationFilter'
 
 import DialectFilterListData from 'views/components/DialectFilterList/DialectFilterListData'
 import DialectFilterListPresentation from 'views/components/DialectFilterList/DialectFilterListPresentation'
+import CategoriesDataLayer from 'views/pages/explore/dialect/learn/words/categoriesDataLayer'
 
 import Edit from '@material-ui/icons/Edit'
 import FVButton from 'views/components/FVButton'
@@ -52,6 +53,7 @@ import { initialState } from 'providers/redux/reducers/searchDialect/reducer'
 import { getDialectClassname } from 'views/pages/explore/dialect/helpers'
 import {
   dictionaryListSmallScreenColumnDataTemplate,
+  dictionaryListSmallScreenColumnDataTemplateCustomInspectChildren,
   dictionaryListSmallScreenColumnDataTemplateCustomInspectChildrenCellRender,
   dictionaryListSmallScreenColumnDataTemplateCustomAudio,
   dictionaryListSmallScreenTemplateWords,
@@ -67,7 +69,7 @@ import {
 } from 'views/pages/explore/dialect/learn/base'
 import { SEARCH_BY_ALPHABET, SEARCH_PART_OF_SPEECH_ANY } from 'views/components/SearchDialect/constants'
 import { WORKSPACES } from 'common/Constants'
-import CategoriesDataLayer from 'views/pages/explore/dialect/learn/words/categoriesDataLayer'
+
 const DictionaryList = React.lazy(() => import('views/components/Browsing/DictionaryList'))
 const intl = IntlService.instance
 
@@ -112,7 +114,6 @@ class WordsFilteredByCategory extends Component {
     if (characters === undefined) {
       const _pageIndex = 0
       const _pageSize = 100
-
       await this.props.fetchCharacters(
         `${routeParams.dialect_path}/Alphabet`,
         `&currentPageIndex=${_pageIndex}&pageSize=${_pageSize}&sortOrder=asc&sortBy=fvcharacter:alphabet_order`
@@ -199,13 +200,12 @@ class WordsFilteredByCategory extends Component {
     const computedDocument = ProviderHelpers.getEntry(computeDocument, `${routeParams.dialect_path}/Dictionary`)
     const computedPortal = ProviderHelpers.getEntry(computePortal, `${routeParams.dialect_path}/Portal`)
     const computedDialect2 = ProviderHelpers.getEntry(computeDialect2, routeParams.dialect_path)
-    const uid = selectn('response.uid', computedDocument)
-    const computedWords = ProviderHelpers.getEntry(computeWords, uid)
-
+    const computedDialect2Response = selectn('response', computedDialect2)
+    const parentUid = selectn('response.uid', computedDocument)
+    const computedWords = ProviderHelpers.getEntry(computeWords, parentUid)
     const pageTitle = `${selectn('response.contextParameters.ancestry.dialect.dc:title', computedPortal) ||
       ''} ${intl.trans('words', 'Words', 'first')}`
 
-    const computedDialect2Response = selectn('response', computedDialect2)
     const wordListView = selectn('response.uid', computedDocument) ? (
       <Suspense fallback={<div>Loading...</div>}>
         <DictionaryList
@@ -344,10 +344,10 @@ class WordsFilteredByCategory extends Component {
                   categoriesData.length > 0 && (
                     <DialectFilterListData
                       appliedFilterIds={new Set([routeParams.category])}
-                      setDialectFilterCallback={this.setDialectFilterCallback}
-                      transformData={categoriesData}
+                      setDialectFilterCallback={this.handleSearch}
+                      facets={categoriesData}
+                      facetType="category"
                       type="words"
-                      // workspaceKey="fv-phrase:phrase_books" // TODO?
                     >
                       {({ listItemData }) => {
                         return (
@@ -400,7 +400,6 @@ class WordsFilteredByCategory extends Component {
         // The above test (`is(...) === false`) prevents updates triggered by back or forward buttons
         // and any other unnecessary updates (ie: the filter didn't change)
         updateUrlIfPageOrPageSizeIsDifferent({
-          // pageSize, // TODO ?
           preserveSearch: true,
           pushWindowPath: this.props.pushWindowPath,
           routeParams,
@@ -585,6 +584,8 @@ class WordsFilteredByCategory extends Component {
       columns.push({
         name: 'fv-word:categories',
         title: intl.trans('categories', 'Categories', 'first'),
+        columnDataTemplate: dictionaryListSmallScreenColumnDataTemplate.custom,
+        columnDataTemplateCustom: dictionaryListSmallScreenColumnDataTemplateCustomInspectChildren,
         render: (v, data) => {
           return UIHelpers.generateDelimitedDatumFromDataset({
             dataSet: selectn('contextParameters.word.categories', data),
@@ -642,35 +643,6 @@ class WordsFilteredByCategory extends Component {
         categories: currentAppliedFilterCategories,
       }),
     })
-  }
-
-  setDialectFilterCallback = (/*{
-    facetField,
-    href,
-    selected,
-    unselected,
-    updateUrl,
-  }*/) => {
-    this.changeFilter()
-
-    // const newFilter = handleDialectFilterList({
-    //   facetField,
-    //   selected,
-    //   unselected,
-    //   type: 'words',
-    // })
-
-    // // When facets change, pagination should be reset
-    // const { routeParams, splitWindowPath } = this.props
-    // if (shouldResetUrlPagination === true) {
-    //   updateUrlIfPageOrPageSizeIsDifferent({
-    //     pushWindowPath: this.props.pushWindowPath,
-    //     routeParams: routeParams,
-    //     splitWindowPath: splitWindowPath,
-    //   })
-    // }
-
-    // this.setState({ filterInfo: newFilter })
   }
 
   resetSearch = () => {
