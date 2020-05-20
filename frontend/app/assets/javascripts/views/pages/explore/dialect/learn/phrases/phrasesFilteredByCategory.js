@@ -61,6 +61,7 @@ import {
 } from 'views/components/Browsing/DictionaryListSmallScreen'
 import {
   getCharacters,
+  handleDialectFilterList,
   onNavigateRequest,
   sortHandler,
   updateFilter,
@@ -334,10 +335,11 @@ export class PhrasesFilteredByCategory extends Component {
                   categoriesData.length > 0 && (
                     <DialectFilterListData
                       appliedFilterIds={new Set([routeParams.phraseBook])}
-                      setDialectFilterCallback={this.handleSearch} // TODO
+                      setDialectFilterCallback={this.setDialectFilterCallback} // TODO
                       facets={categoriesData}
                       facetType="phraseBook"
                       type="phrases"
+                      workspaceKey="fv-phrase:phrase_books"
                     >
                       {({ listItemData }) => {
                         return (
@@ -596,6 +598,43 @@ export class PhrasesFilteredByCategory extends Component {
     this.changeFilter()
 
     NavigationHelpers.navigate(href, this.props.pushWindowPath)
+  }
+
+  setDialectFilterCallback = async ({ facetField, selected, unselected } = {}) => {
+    this.changeFilter()
+
+    this.handleDialectFilterChange({
+      facetField,
+      selected,
+      type: 'phrases',
+      unselected,
+    })
+  }
+
+  handleDialectFilterChange = ({ facetField, selected, type, unselected, shouldResetUrlPagination }) => {
+    const { filterInfo } = this.state
+    const { routeParams, splitWindowPath } = this.props
+
+    const newFilter = handleDialectFilterList({
+      facetField,
+      selected,
+      type,
+      unselected,
+      routeParams,
+      filterInfo,
+    })
+
+    // When facets change, pagination should be reset.
+    // In these pages (words/phrase), list views are controlled via URL
+    if (shouldResetUrlPagination === true) {
+      updateUrlIfPageOrPageSizeIsDifferent({
+        pushWindowPath: this.props.pushWindowPath,
+        routeParams,
+        splitWindowPath,
+      })
+    }
+
+    this.setState({ filterInfo: newFilter })
   }
 
   handleSearch = () => {

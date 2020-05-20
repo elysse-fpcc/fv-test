@@ -52,13 +52,18 @@ class DialectFilterListData extends Component {
     if (facets && facets.length > 0) {
       this.filtersSorted = this.sortDialectFilters(facets)
       this.historyData = this.generateDataForHistoryEvents(this.filtersSorted)
+
       this.setState(
         {
           facets,
         },
         () => {
           if (this.selectedDialectFilter) {
+            // console.log('Facets', facets)
+            // console.log('HistoryData', this.historyData)
+            // console.log('selectedDialectFilter', this.selectedDialectFilter)
             const selectedParams = this.historyData[this.selectedDialectFilter]
+            // console.log('Params', selectedParams)
             if (selectedParams) {
               this.setSelected(selectedParams)
               this.selectedDialectFilter = undefined
@@ -270,7 +275,7 @@ class DialectFilterListData extends Component {
   // Saves to redux so other components can respond (eg: "you are searching...")
   // also calls any passed in callback from the parent/layout component (typically used to update it's state)
   setDialectFilter = async ({ facetField, href, selected, updateUrl }) => {
-    const searchBy = this.props.type === 'words' ? SEARCH_BY_CATEGORY : SEARCH_BY_PHRASE_BOOK
+    const searchBy = this.props.type === 'phrases' ? SEARCH_BY_PHRASE_BOOK : SEARCH_BY_CATEGORY
     await this.props.searchDialectUpdate({
       searchByAlphabet: '',
       searchByMode: searchBy,
@@ -348,7 +353,7 @@ DialectFilterListData.propTypes = {
   path: string, // Used with facets
   setDialectFilterCallback: func,
   facets: array.isRequired,
-  facetType: oneOf(['categories', 'phraseBook']),
+  facetType: oneOf(['category', 'phraseBook']),
   type: oneOf(['words', 'phrases']).isRequired,
   workspaceKey: string, // Used with facetField
   // Redux props:

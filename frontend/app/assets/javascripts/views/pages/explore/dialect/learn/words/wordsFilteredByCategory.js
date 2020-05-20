@@ -60,6 +60,7 @@ import {
 } from 'views/components/Browsing/DictionaryListSmallScreen'
 import {
   getCharacters,
+  handleDialectFilterList,
   onNavigateRequest,
   sortHandler,
   updateFilter,
@@ -344,10 +345,11 @@ class WordsFilteredByCategory extends Component {
                   categoriesData.length > 0 && (
                     <DialectFilterListData
                       appliedFilterIds={new Set([routeParams.category])}
-                      setDialectFilterCallback={this.handleSearch}
+                      setDialectFilterCallback={this.setDialectFilterCallback}
                       facets={categoriesData}
                       facetType="category"
                       type="words"
+                      workspaceKey="fv-word:categories"
                     >
                       {({ listItemData }) => {
                         return (
@@ -619,6 +621,43 @@ class WordsFilteredByCategory extends Component {
     this.changeFilter()
 
     NavigationHelpers.navigate(href, this.props.pushWindowPath)
+  }
+
+  setDialectFilterCallback = async ({ facetField, selected, unselected } = {}) => {
+    this.changeFilter()
+
+    this.handleDialectFilterChange({
+      facetField,
+      selected,
+      type: 'words',
+      unselected,
+    })
+  }
+
+  handleDialectFilterChange = ({ facetField, selected, type, unselected, shouldResetUrlPagination }) => {
+    const { filterInfo } = this.state
+    const { routeParams, splitWindowPath } = this.props
+
+    const newFilter = handleDialectFilterList({
+      facetField,
+      selected,
+      type,
+      unselected,
+      routeParams,
+      filterInfo,
+    })
+
+    // When facets change, pagination should be reset.
+    // In these pages (words/phrase), list views are controlled via URL
+    if (shouldResetUrlPagination === true) {
+      updateUrlIfPageOrPageSizeIsDifferent({
+        pushWindowPath: this.props.pushWindowPath,
+        routeParams,
+        splitWindowPath,
+      })
+    }
+
+    this.setState({ filterInfo: newFilter })
   }
 
   handleSearch = () => {

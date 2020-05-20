@@ -300,9 +300,10 @@ export class PageDialectLearnPhrases extends PageDialectLearnBase {
                   categoriesData.length > 0 && (
                     <DialectFilterListData
                       appliedFilterIds={filterInfo.get('currentCategoryFilterIds')}
-                      setDialectFilterCallback={this.setDialectFilterCallback}
+                      setDialectFilterCallback={this.handleSearch}
                       facets={categoriesData}
                       facetType="phraseBook"
+                      type="phrases"
                       workspaceKey="fv-phrase:phrase_books"
                     >
                       {({ listItemData }) => {

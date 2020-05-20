@@ -300,7 +300,7 @@ class PageDialectLearnWords extends PageDialectLearnBase {
                   categoriesData.length > 0 && (
                     <DialectFilterListData
                       appliedFilterIds={filterInfo.get('currentCategoryFilterIds')}
-                      setDialectFilterCallback={this.setDialectFilterCallback}
+                      setDialectFilterCallback={this.handleSearch}
                       facets={categoriesData}
                       facetType="category"
                       type="words"
