@@ -59,11 +59,7 @@ class DialectFilterListData extends Component {
         },
         () => {
           if (this.selectedDialectFilter) {
-            // console.log('Facets', facets)
-            // console.log('HistoryData', this.historyData)
-            // console.log('selectedDialectFilter', this.selectedDialectFilter)
             const selectedParams = this.historyData[this.selectedDialectFilter]
-            // console.log('Params', selectedParams)
             if (selectedParams) {
               this.setSelected(selectedParams)
               this.selectedDialectFilter = undefined
@@ -234,7 +230,7 @@ class DialectFilterListData extends Component {
           childrenUids.push(uidChild)
 
           // Saving for history events
-          this.historyData[uidChild] = {
+          newHistoryData[uidChild] = {
             href: this.generateUrlDialectFilterListItem(uidChild),
             checkedFacetUid: uidChild,
             childrenIds: null,
