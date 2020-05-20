@@ -17,7 +17,8 @@ public class MigrateCategoriesWorker extends AbstractWork {
   private final DocumentRef jobContainerRef;
   private final int batchSize;
 
-  private final MigrateCategoriesService service = Framework.getService(MigrateCategoriesService.class);
+  private final MigrateCategoriesService service = Framework
+      .getService(MigrateCategoriesService.class);
 
   private final MaintenanceLogger maintenanceLogger = Framework.getService(MaintenanceLogger.class);
 
