@@ -3,7 +3,7 @@
 
   <properties>
     <nuxeo.distribution.version>10.10</nuxeo.distribution.version>
-    <sonar.projectKey>elysse-fpcc_fv-web-ui</sonar.projectKey>
+    <sonar.projectKey>elysse-fpcc_fv-web-ui-2</sonar.projectKey>
     <sonar.organization>elysse-fpcc</sonar.organization>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     <sonar.login>daa989d4fdd7fda61fb2ac48d5aa61227e8796c1</sonar.login>
