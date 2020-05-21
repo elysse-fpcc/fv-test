@@ -6,7 +6,7 @@
     <sonar.projectKey>elysse-fpcc_fv-test</sonar.projectKey>
     <sonar.organization>elysse-fpcc</sonar.organization>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
-    <sonar.login>d352399c1aed9f1e33264beec6fbf194860c4abd</sonar.login>
+    <sonar.login>b2cec580f7673ada6d9702eef0536409d3bd76a3</sonar.login>
   </properties>
 
   <parent>
