@@ -5,7 +5,7 @@
     <nuxeo.distribution.version>10.10</nuxeo.distribution.version>
     <sonar.organization>elysse-fpcc</sonar.organization>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
-    <sonar.login>b2cec580f7673ada6d9702eef0536409d3bd76a3</sonar.login>
+    <sonar.login>dbd1d015e6ccc954aa1a29849d26c9e2539e96a7</sonar.login>
   </properties>
 
   <parent>
