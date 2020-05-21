@@ -656,8 +656,6 @@ WordsFilteredByCategory.propTypes = {
   splitWindowPath: array.isRequired,
   windowPath: string.isRequired,
   // REDUX: actions/dispatch/func
-  // fetchCategories: func.isRequired,
-  fetchCharacters: func.isRequired,
   fetchDocument: func.isRequired,
   fetchPortal: func.isRequired,
   fetchWords: func.isRequired,

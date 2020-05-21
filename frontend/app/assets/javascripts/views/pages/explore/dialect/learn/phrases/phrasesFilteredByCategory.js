@@ -62,7 +62,6 @@ import {
   dictionaryListSmallScreenTemplatePhrases,
 } from 'views/components/Browsing/DictionaryListSmallScreen'
 import {
-  handleDialectFilterList,
   onNavigateRequest,
   sortHandler,
   updateFilter,
@@ -187,7 +186,7 @@ export class PhrasesFilteredByCategory extends Component {
           // ==================================================
           // Search
           // --------------------------------------------------
-          handleSearch={this.handleSearch}
+          handleSearch={this.changeFilter}
           resetSearch={this.resetSearch}
           hasSearch
           searchUi={[
@@ -321,7 +320,7 @@ export class PhrasesFilteredByCategory extends Component {
                   categoriesData.length > 0 && (
                     <DialectFilterListData
                       appliedFilterIds={new Set([routeParams.phraseBook])}
-                      setDialectFilterCallback={this.setDialectFilterCallback} // TODO
+                      setDialectFilterCallback={this.changeFilter} // TODO
                       facets={categoriesData}
                       facetType="phraseBook"
                       type="phrases"
@@ -378,10 +377,6 @@ export class PhrasesFilteredByCategory extends Component {
         })
       })
     }
-  }
-
-  clearDialectFilter = () => {
-    this.setState({ filterInfo: this.initialFilterInfo() })
   }
 
   fetchListViewData({ pageIndex = 1, pageSize = 10 } = {}) {
@@ -566,47 +561,6 @@ export class PhrasesFilteredByCategory extends Component {
     }
 
     return columns
-  }
-
-  setDialectFilterCallback = async ({ facetField, selected, unselected } = {}) => {
-    this.changeFilter()
-
-    this.handleDialectFilterChange({
-      facetField,
-      selected,
-      type: 'phrases',
-      unselected,
-    })
-  }
-
-  handleDialectFilterChange = ({ facetField, selected, type, unselected, shouldResetUrlPagination }) => {
-    const { filterInfo } = this.state
-    const { routeParams, splitWindowPath } = this.props
-
-    const newFilter = handleDialectFilterList({
-      facetField,
-      selected,
-      type,
-      unselected,
-      routeParams,
-      filterInfo,
-    })
-
-    // When facets change, pagination should be reset.
-    // In these pages (words/phrase), list views are controlled via URL
-    if (shouldResetUrlPagination === true) {
-      updateUrlIfPageOrPageSizeIsDifferent({
-        pushWindowPath: this.props.pushWindowPath,
-        routeParams,
-        splitWindowPath,
-      })
-    }
-
-    this.setState({ filterInfo: newFilter })
-  }
-
-  handleSearch = () => {
-    this.changeFilter()
   }
 
   initialFilterInfo = () => {

@@ -288,7 +288,7 @@ class PageDialectLearnWords extends PageDialectLearnBase {
                   categoriesData.length > 0 && (
                     <DialectFilterListData
                       appliedFilterIds={filterInfo.get('currentCategoryFilterIds')}
-                      setDialectFilterCallback={this.handleSearch}
+                      setDialectFilterCallback={this.changeFilter}
                       facets={categoriesData}
                       facetType="category"
                       type="words"
@@ -370,25 +370,6 @@ class PageDialectLearnWords extends PageDialectLearnBase {
     }
   }
 
-  clearDialectFilter = () => {
-    this.setState({ filterInfo: this.initialFilterInfo() })
-  }
-
-  // NOTE: PageDialectLearnBase calls `fetchData`
-  fetchData(newProps) {
-    newProps.fetchPortal(newProps.routeParams.dialect_path + '/Portal')
-    newProps.fetchDocument(newProps.routeParams.dialect_path + '/Dictionary')
-  }
-
-  // NOTE: PageDialectLearnBase calls `_getPageKey`
-  _getPageKey = () => {
-    return `${this.props.routeParams.area}_${this.props.routeParams.dialect_name}_learn_words`
-  }
-
-  handleSearch = () => {
-    this.changeFilter()
-  }
-
   initialFilterInfo = () => {
     const routeParamsCategory = this.props.routeParams.category
     const initialCategories = routeParamsCategory ? new Set([routeParamsCategory]) : new Set()
@@ -447,14 +428,9 @@ class PageDialectLearnWords extends PageDialectLearnBase {
     )
   }
 
-  setDialectFilterCallback = ({
-    // facetField,
-    href,
-    // selected,
-    // unselected,
-    updateUrl,
-  }) => {
-    this.changeFilter({ href, updateHistory: updateUrl })
+  // NOTE: PageDialectLearnBase calls `_getPageKey`
+  _getPageKey = () => {
+    return this.props.routeParams.area + '_' + this.props.routeParams.dialect_name + '_learn_words'
   }
 }
 

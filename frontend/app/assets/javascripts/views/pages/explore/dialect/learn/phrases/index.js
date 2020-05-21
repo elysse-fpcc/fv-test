@@ -290,7 +290,7 @@ export class PageDialectLearnPhrases extends PageDialectLearnBase {
                   categoriesData.length > 0 && (
                     <DialectFilterListData
                       appliedFilterIds={filterInfo.get('currentCategoryFilterIds')}
-                      setDialectFilterCallback={this.handleSearch}
+                      setDialectFilterCallback={this.changeFilter}
                       facets={categoriesData}
                       facetType="phraseBook"
                       type="phrases"
@@ -368,18 +368,6 @@ export class PageDialectLearnPhrases extends PageDialectLearnBase {
         }
       })
     }
-  }
-
-  clearDialectFilter = () => {
-    this.setState({ filterInfo: this.initialFilterInfo() })
-  }
-
-  // NOTE: PageDialectLearnBase calls `fetchData`
-  // NOTE: Providing an empty fn() so that PageDialectLearnBase doesn't complain.
-  fetchData() {}
-
-  handleSearch = () => {
-    this.changeFilter()
   }
 
   initialFilterInfo = () => {
