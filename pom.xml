@@ -3,9 +3,10 @@
 
   <properties>
     <nuxeo.distribution.version>10.10</nuxeo.distribution.version>
-    <sonar.organization>elysse-fpcc</sonar.organization>
+    <sonar.organization>davidlacho</sonar.organization>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
-    <sonar.login>dbd1d015e6ccc954aa1a29849d26c9e2539e96a7</sonar.login>
+    <sonar.login>8d06587efdbecc71da7d994d92c50581b86361b3</sonar.login>
+    <sonar.branch.name>${scmBranch}</sonar.branch.name>
   </properties>
 
   <parent>
@@ -113,6 +114,11 @@
         <artifactId>FirstVoicesData</artifactId>
         <version>${project.version}</version>
       </dependency>
+      <dependency>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>buildnumber-maven-plugin</artifactId>
+        <version>1.4</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
@@ -143,9 +149,46 @@
         <version>3.1.1</version>
       </plugin>
       <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>buildnumber-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <phase>validate</phase>
+            <goals>
+              <goal>create</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
         <groupId>org.sonarsource.scanner.maven</groupId>
         <artifactId>sonar-maven-plugin</artifactId>
         <version>3.4.0.905</version>
+      </plugin>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.8.5</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>report</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+<!--          <execution>-->
+<!--            <id>jacoco-check</id>-->
+<!--            <goals>-->
+<!--              <goal>check</goal>-->
+<!--            </goals>-->
+<!--          </execution>-->
+        </executions>
       </plugin>
     </plugins>
   </build>
@@ -184,6 +227,28 @@
           <url>${external.releases.url}</url>
         </repository>
       </distributionManagement>
+    </profile>
+    <profile>
+      <id>sonar</id>
+      <properties>
+<!--        <failIfNoTests>false</failIfNoTests>-->
+<!--        <maven.test.failure.ignore>true</maven.test.failure.ignore>-->
+      </properties>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+          </plugin>
+<!--          <plugin>-->
+<!--            <groupId>org.apache.maven.plugins</groupId>-->
+<!--            <artifactId>maven-surefire-plugin</artifactId>-->
+<!--            <configuration>-->
+<!--              <argLine>-Xmx1g -Dfile.encoding=UTF-8 -XX:-OmitStackTraceInFastThrow @{it.failsafe.argLine}</argLine>-->
+<!--            </configuration>-->
+<!--          </plugin>-->
+        </plugins>
+      </build>
     </profile>
   </profiles>
 </project>
